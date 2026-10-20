@@ -4,16 +4,13 @@ services:
     runtime: docker
     rootDir: app
     dockerfilePath: ./Dockerfile
-    # A persistent disk is required — SQLite lives on it. Disks are only
-    # available on paid instance types, and the free tier sleeps after idle.
-    plan: starter
+    # Free tier: no persistent disk, and the instance sleeps after 15 minutes
+    # idle. Keep it warm with an external cron pinging /api/health every
+    # 10 minutes. Any restart still resets the SQLite file — see DEPLOY.md.
+    plan: free
     region: singapore
     healthCheckPath: /api/health
     autoDeploy: true
-    disk:
-      name: connexa-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: CONNEXA_SECRET
         generateValue: true

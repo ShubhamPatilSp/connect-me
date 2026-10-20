@@ -31,4 +31,5 @@ RUN mkdir -p /data
 ENV CONNEXA_DB_PATH=/data/connexa.db
 
 EXPOSE 3000
-CMD ["npx", "next", "start", "-p", "3000", "-H", "0.0.0.0"]
+# Hosts like Render inject $PORT and route only to it — never hardcode here.
+CMD ["sh", "-c", "npx next start -p ${PORT:-3000} -H 0.0.0.0"]
