@@ -1,0 +1,14 @@
+import { chromium } from "playwright-core";
+const EXE = "C:/Users/Shubh/AppData/Local/ms-playwright/chromium-1243/chrome-win64/chrome.exe";
+const browser = await chromium.launch({ executablePath: EXE });
+const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 2 });
+await page.goto("http://127.0.0.1:3000/onboarding", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(700);
+await page.screenshot({ path: "shots/21-auth-email.png" });
+const m = await page.evaluate(() => ({ h: document.body.scrollHeight, v: window.innerHeight }));
+console.log("email step:", JSON.stringify(m));
+await page.getByRole("button", { name: "Phone", exact: true }).click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: "shots/22-auth-phone.png" });
+console.log("phone tab ok");
+await browser.close();

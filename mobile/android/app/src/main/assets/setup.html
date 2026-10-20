@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>Connexa — Connect</title>
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --surface: #161618;
+    --surface-2: #1d1d21;
+    --line: rgba(255, 255, 255, 0.1);
+    --text: #f7f7f8;
+    --muted: #9b9ba4;
+    --dim: #6d6d78;
+    --brand: #ff5a2b;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 28px 24px calc(28px + env(safe-area-inset-bottom, 0px));
+    position: relative; overflow: hidden;
+  }
+  body::before {
+    content: ""; position: absolute; left: 50%; bottom: -30%; width: 150%; height: 65%;
+    transform: translateX(-50%);
+    background: radial-gradient(50% 50% at 50% 50%, rgba(255,90,43,.35) 0%, rgba(226,56,42,.12) 45%, transparent 72%);
+    pointer-events: none;
+  }
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 400px; margin: 0 auto; }
+  .mark {
+    width: 60px; height: 60px; border-radius: 19px; margin-bottom: 26px;
+    background: linear-gradient(135deg, #ff8a4c, #e2382a);
+    display: grid; place-items: center;
+    box-shadow: 0 14px 40px rgba(255,90,43,.35);
+  }
+  .mark svg { width: 30px; height: 30px; }
+  h1 { font-size: 27px; line-height: 1.15; letter-spacing: -0.03em; margin: 0 0 10px; font-weight: 700; }
+  .sub { color: var(--muted); font-size: 14px; line-height: 1.6; margin: 0 0 26px; }
+  label { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--dim); font-weight: 600; margin-bottom: 9px; }
+  input {
+    width: 100%; height: 56px; padding: 0 18px; border-radius: 16px;
+    background: var(--surface); border: 1px solid var(--line); color: var(--text);
+    font-size: 16px; outline: none; transition: border-color .16s ease;
+  }
+  input::placeholder { color: var(--dim); }
+  input:focus { border-color: rgba(255,90,43,.65); background: var(--surface-2); }
+  button {
+    width: 100%; height: 56px; margin-top: 14px; border: none; border-radius: 999px;
+    background: linear-gradient(135deg, #ff7a3d, #ff5a2b 45%, #e2382a);
+    color: #fff; font-size: 15.5px; font-weight: 600; letter-spacing: -0.01em;
+    box-shadow: 0 12px 32px rgba(255,90,43,.3);
+    transition: transform .14s ease, filter .14s ease;
+  }
+  button:active { transform: scale(.975); filter: brightness(1.05); }
+  button:disabled { opacity: .55; }
+  .err {
+    display: none; margin-bottom: 18px; padding: 12px 16px; border-radius: 14px;
+    background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.35);
+    color: #fca5a5; font-size: 13px; line-height: 1.5;
+  }
+  .err.show { display: block; }
+  .hint {
+    margin-top: 22px; padding: 16px 18px; border-radius: 16px;
+    background: rgba(255,255,255,.03); border: 1px solid var(--line);
+    font-size: 12.5px; line-height: 1.65; color: var(--muted);
+  }
+  .hint b { color: var(--text); font-weight: 600; }
+  code {
+    font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+    background: rgba(255,255,255,.07); padding: 2px 6px; border-radius: 5px; color: #ffb59a;
+  }
+  .foot { margin-top: 26px; text-align: center; font-size: 11px; color: var(--dim); letter-spacing: .02em; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="mark">
+      <svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+        <path d="M12 20.8s-8-4.9-8-10.2A4.7 4.7 0 0 1 12 7.6a4.7 4.7 0 0 1 8 3c0 5.3-8 10.2-8 10.2Z"/>
+      </svg>
+    </div>
+
+    <h1>Connect to<br />your Connexa</h1>
+    <p class="sub">This app is the client. Point it at the Connexa server running on your
+      machine or your network.</p>
+
+    <div class="err" id="err"></div>
+
+    <label for="url">Server address</label>
+    <input id="url" type="url" inputmode="url" autocomplete="off" autocapitalize="none"
+           spellcheck="false" placeholder="http://192.168.1.42:3000" />
+
+    <button id="go">Connect</button>
+
+    <div class="hint">
+      <b>Where do I get this?</b><br />
+      On your computer, run <code>cd app &amp;&amp; npm start</code>, then use the machine's
+      LAN address with port <code>3000</code> — the phone must be on the same Wi-Fi.
+      Find it with <code>ipconfig</code> (IPv4 address).
+    </div>
+
+    <p class="foot">Connexa · Khandesh only · 18+</p>
+  </div>
+
+<script>
+  var input = document.getElementById("url");
+  var errBox = document.getElementById("err");
+  var button = document.getElementById("go");
+  var bridge = window.AndroidBridge;
+
+  function showError(message) {
+    errBox.textContent = message;
+    errBox.classList.add("show");
+  }
+
+  function normalize(raw) {
+    var value = (raw || "").trim();
+    if (!value) return null;
+    if (!/^https?:\/\//i.test(value)) value = "http://" + value;
+    value = value.replace(/\/+$/, "");
+    if (!/^https?:\/\/[a-z0-9.\-]+(:\d+)?$/i.test(value)) return null;
+    return value;
+  }
+
+  var params = new URLSearchParams(location.search);
+  if (params.get("error")) showError(params.get("error"));
+
+  if (bridge && bridge.getServer) {
+    var saved = bridge.getServer();
+    if (saved) input.value = saved;
+  }
+
+  function connect() {
+    var url = normalize(input.value);
+    if (!url) {
+      showError("That doesn't look like a server address. Example: http://192.168.1.42:3000");
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Connecting…";
+
+    if (bridge && bridge.setServer) {
+      bridge.setServer(url);
+      return;
+    }
+    // Opened outside the app shell — just navigate.
+    location.replace(url);
+  }
+
+  button.addEventListener("click", connect);
+  input.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") connect();
+  });
+</script>
+</body>
+</html>

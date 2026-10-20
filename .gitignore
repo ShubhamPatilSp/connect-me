@@ -1,0 +1,41 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next
+.next/
+out/
+build/
+
+# local data
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# secrets
+.env.local
+.env*.local
+google-services.json
+*.jks
+*.keystore
+
+# android
+mobile/android/local.properties
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+*.apk
+*.aab
+
+# tooling
+*.log
+cookies.txt
+newuser.txt
+shots/
+.DS_Store
+Thumbs.db
+
+# agent workspace
+.workbuddy-ai/

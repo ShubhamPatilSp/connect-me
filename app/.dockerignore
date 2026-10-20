@@ -1,0 +1,11 @@
+node_modules
+.next
+data
+*.log
+cookies.txt
+newuser.txt
+shots
+scripts
+.env.local
+Dockerfile
+.dockerignore

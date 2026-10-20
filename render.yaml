@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: connexa
+    runtime: docker
+    rootDir: app
+    dockerfilePath: ./Dockerfile
+    # A persistent disk is required — SQLite lives on it. Disks are only
+    # available on paid instance types, and the free tier sleeps after idle.
+    plan: starter
+    region: singapore
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: connexa-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: CONNEXA_SECRET
+        generateValue: true
+      - key: CONNEXA_DB_PATH
+        value: /data/connexa.db
+      # Demo affordances must be off on a public host.
+      - key: CONNEXA_DEMO_LOGIN
+        value: "0"
+      # Launch with real users only — no seeded profiles.
+      - key: CONNEXA_AUTOSEED
+        value: "0"
+      - key: FIREBASE_PROJECT_ID
+        value: connect-me-93fda

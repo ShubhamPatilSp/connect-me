@@ -1,0 +1,238 @@
+.page {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 24px calc(26px + env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(120% 80% at 50% 40%, #000 20%, transparent 78%);
+  -webkit-mask-image: radial-gradient(120% 80% at 50% 40%, #000 20%, transparent 78%);
+}
+
+.glow {
+  position: absolute;
+  left: 50%;
+  bottom: -32%;
+  width: 140%;
+  height: 70%;
+  transform: translateX(-50%);
+  z-index: -1;
+  background: radial-gradient(
+    50% 50% at 50% 50%,
+    rgba(255, 90, 43, 0.42) 0%,
+    rgba(226, 56, 42, 0.16) 42%,
+    transparent 72%
+  );
+  filter: blur(18px);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 0 4px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brandMark {
+  width: 26px;
+  height: 26px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #ff8a4c, #e2382a);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 18px rgba(255, 90, 43, 0.4);
+}
+
+.art {
+  position: relative;
+  height: 322px;
+  margin: 6px 0 0;
+  flex-shrink: 0;
+}
+
+.card {
+  position: absolute;
+  border-radius: 26px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.55);
+  background: var(--surface-2);
+}
+
+.cardBack {
+  width: 45%;
+  height: 208px;
+  left: 2%;
+  top: 14px;
+  transform: rotate(-9deg);
+  opacity: 0.94;
+}
+
+.cardFront {
+  width: 49%;
+  height: 236px;
+  right: 3%;
+  top: 52px;
+  transform: rotate(7deg);
+  z-index: 2;
+}
+
+.cardLabel {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  z-index: 2;
+}
+
+.cardScrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.62), transparent 48%);
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  z-index: 4;
+}
+
+.bubbleMail {
+  width: 44px;
+  height: 44px;
+  right: 12%;
+  top: 26px;
+  background: linear-gradient(140deg, #4f8dfd, #2563eb);
+}
+
+.bubbleStar {
+  width: 38px;
+  height: 38px;
+  left: 12%;
+  top: 148px;
+  background: linear-gradient(140deg, #9a7dff, #6a45f0);
+}
+
+.bubbleHeart {
+  width: 42px;
+  height: 42px;
+  right: 6%;
+  bottom: 62px;
+  background: linear-gradient(140deg, #ff7a3d, #e2382a);
+}
+
+.copy {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1.06;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  margin: 0 0 14px;
+}
+
+.sub {
+  margin: 0 0 26px;
+  color: var(--text-muted);
+  font-size: 14.5px;
+  line-height: 1.6;
+  max-width: 330px;
+}
+
+.ctaRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ctaHeart {
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(140deg, #ff7a3d, #e2382a);
+  color: #fff;
+  box-shadow: 0 14px 34px rgba(255, 90, 43, 0.36);
+  transition: transform 0.16s ease;
+}
+
+.ctaHeart:active {
+  transform: scale(0.94);
+}
+
+.ctaMain {
+  flex: 1;
+  height: 58px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 24px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  font-weight: 600;
+  font-size: 15px;
+  transition: background 0.16s ease, transform 0.16s ease;
+}
+
+.ctaMain:hover {
+  background: var(--surface-2);
+}
+
+.ctaMain:active {
+  transform: scale(0.985);
+}
+
+.ctaArrow {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.demo {
+  margin-top: 12px;
+}
+
+.foot {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
