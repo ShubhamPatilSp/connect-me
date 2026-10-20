@@ -1,0 +1,14 @@
+import { chromium } from "playwright-core";
+const EXE = "C:/Users/Shubh/AppData/Local/ms-playwright/chromium-1243/chrome-win64/chrome.exe";
+const browser = await chromium.launch({ executablePath: EXE });
+const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 2 });
+await page.goto("http://127.0.0.1:3000/", { waitUntil: "domcontentloaded" });
+await page.evaluate(() => fetch("/api/auth/demo", { method: "POST" }));
+await page.goto("http://127.0.0.1:3000/discover", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(1500);
+await page.getByLabel("Filters").click();
+await page.waitForTimeout(800);
+const values = await page.locator(".filter-value").allInnerTexts();
+console.log("values:", JSON.stringify(values));
+await page.screenshot({ path: "shots/29-filters-edge.png" });
+await browser.close();

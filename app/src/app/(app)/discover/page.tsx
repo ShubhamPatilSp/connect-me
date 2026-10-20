@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/icons";
 import { Photo } from "@/components/media";
-import { MatchModal, Sheet } from "@/components/overlays";
+import { FilterSheet, type FilterPrefs } from "@/components/FilterSheet";
+import { MatchModal } from "@/components/overlays";
 import { SwipeDeck, type SwipeDeckHandle, type SwipeDirection } from "@/components/SwipeDeck";
 import { api, ApiError } from "@/lib/client/api";
 import { useToast } from "@/lib/client/hooks";
@@ -14,6 +15,7 @@ import type { DeckCard, Profile } from "@/lib/types";
 interface MeResponse {
   user: { id: string; name: string; cityId: string; isPremium: boolean };
   profile: Profile;
+  prefs: { ageMin: number; ageMax: number; distanceKm: number; verifiedOnly: boolean };
   stats: { likesRemaining: number };
 }
 
@@ -42,7 +44,12 @@ export default function DiscoverPage() {
   const [saving, setSaving] = useState(false);
   const [toast, showToast] = useToast();
 
-  const [prefs, setPrefs] = useState({ ageMin: 21, ageMax: 40, distance: 60, verifiedOnly: false });
+  const [prefs, setPrefs] = useState<FilterPrefs>({
+    ageMin: 21,
+    ageMax: 40,
+    distance: 60,
+    verifiedOnly: false,
+  });
 
   const loadDeck = useCallback(async (limit = 12) => {
     const res = await api.get<DeckResponse>(`/api/deck?limit=${limit}`);
@@ -61,6 +68,12 @@ export default function DiscoverPage() {
         ]);
         if (cancelled) return;
         setMe(meRes);
+        setPrefs({
+          ageMin: meRes.prefs.ageMin,
+          ageMax: meRes.prefs.ageMax,
+          distance: meRes.prefs.distanceKm,
+          verifiedOnly: meRes.prefs.verifiedOnly,
+        });
         setCards(deckRes.cards);
         setLikesLeft(deckRes.likesRemaining);
       } catch (err) {
@@ -110,14 +123,14 @@ export default function DiscoverPage() {
     [cards, loadDeck, showToast],
   );
 
-  const savePrefs = async () => {
+  const savePrefs = async (next: FilterPrefs) => {
     setSaving(true);
     try {
       await api.patch("/api/me", {
-        prefAgeMin: prefs.ageMin,
-        prefAgeMax: prefs.ageMax,
-        prefDistanceKm: prefs.distance,
-        prefVerifiedOnly: prefs.verifiedOnly,
+        prefAgeMin: next.ageMin,
+        prefAgeMax: next.ageMax,
+        prefDistanceKm: next.distance,
+        prefVerifiedOnly: next.verifiedOnly,
       });
       await loadDeck(12);
       setFiltersOpen(false);
@@ -233,79 +246,16 @@ export default function DiscoverPage() {
         />
       )}
 
-      <Sheet
+      <FilterSheet
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
-        title="Discovery filters"
-        subtitle="Only applies inside Khandesh — you can't search outside the region."
-      >
-        <div style={{ marginBottom: 22 }}>
-          <div className="slider-row">
-            <span className="label">Age range</span>
-            <span className="slider-value">
-              {prefs.ageMin} – {prefs.ageMax}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={18}
-            max={60}
-            value={prefs.ageMin}
-            onChange={(e) =>
-              setPrefs((p) => ({ ...p, ageMin: Math.min(Number(e.target.value), p.ageMax - 1) }))
-            }
-          />
-          <div style={{ height: 12 }} />
-          <input
-            type="range"
-            min={18}
-            max={60}
-            value={prefs.ageMax}
-            onChange={(e) =>
-              setPrefs((p) => ({ ...p, ageMax: Math.max(Number(e.target.value), p.ageMin + 1) }))
-            }
-          />
-        </div>
-
-        <div style={{ marginBottom: 22 }}>
-          <div className="slider-row">
-            <span className="label">Maximum distance</span>
-            <span className="slider-value">{prefs.distance} km</span>
-          </div>
-          <input
-            type="range"
-            min={5}
-            max={120}
-            step={5}
-            value={prefs.distance}
-            onChange={(e) => setPrefs((p) => ({ ...p, distance: Number(e.target.value) }))}
-          />
-        </div>
-
-        <div className="switch-row" style={{ borderTop: "1px solid var(--line)" }}>
-          <div>
-            <div style={{ fontSize: 14.5, fontWeight: 600 }}>Verified profiles only</div>
-            <div className="dim" style={{ fontSize: 12.5 }}>
-              Only show people who passed photo verification
-            </div>
-          </div>
-          <button
-            className="switch"
-            data-on={prefs.verifiedOnly}
-            onClick={() => setPrefs((p) => ({ ...p, verifiedOnly: !p.verifiedOnly }))}
-            aria-label="Verified only"
-          />
-        </div>
-
-        <button
-          className="btn btn-primary btn-block"
-          style={{ marginTop: 16 }}
-          onClick={() => void savePrefs()}
-          disabled={saving}
-        >
-          {saving ? "Updating…" : "Apply filters"}
-        </button>
-      </Sheet>
+        initial={prefs}
+        saving={saving}
+        onApply={async (next) => {
+          setPrefs(next);
+          await savePrefs(next);
+        }}
+      />
 
       {toast && <div className="toast">{toast}</div>}
     </>

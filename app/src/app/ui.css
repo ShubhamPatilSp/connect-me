@@ -542,3 +542,132 @@ input[type="range"]::-moz-range-thumb {
   letter-spacing: 0.08em;
   margin-top: 2px;
 }
+
+/* ── Range slider ──────────────────────────────────────────────────────── */
+
+.rs {
+  position: relative;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  margin: 6px 0 2px;
+}
+
+.rs-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-3);
+}
+
+.rs-fill {
+  position: absolute;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff8a4c, #e2382a);
+  transition: left 0.14s ease, width 0.14s ease;
+}
+
+.rs .rs-input {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 36px;
+  margin: 0;
+  background: none;
+  -webkit-appearance: none;
+  appearance: none;
+  pointer-events: none;
+  outline: none;
+}
+
+.rs .rs-input::-webkit-slider-runnable-track {
+  height: 36px;
+  background: transparent;
+  border: none;
+}
+
+.rs .rs-input::-moz-range-track {
+  height: 36px;
+  background: transparent;
+  border: none;
+}
+
+.rs .rs-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 26px;
+  height: 26px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 3px solid var(--brand);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  cursor: grab;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.rs .rs-input::-webkit-slider-thumb:active {
+  transform: scale(1.14);
+  cursor: grabbing;
+  box-shadow: 0 6px 22px rgba(255, 90, 43, 0.5);
+}
+
+.rs .rs-input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(255, 90, 43, 0.28);
+}
+
+.rs .rs-input::-moz-range-thumb {
+  pointer-events: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 3px solid var(--brand);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  cursor: grab;
+}
+
+/* ── Filter sheet ──────────────────────────────────────────────────────── */
+
+.filter-section {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.filter-section:first-of-type {
+  padding-top: 4px;
+}
+
+.filter-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.filter-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.filter-value {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--brand);
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
