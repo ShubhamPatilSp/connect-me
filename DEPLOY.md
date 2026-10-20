@@ -57,6 +57,20 @@ query, roughly a day of work.
 | `CONNEXA_AUTOSEED` | `0` skips seeding fake profiles — launch empty. |
 | `FIREBASE_PROJECT_ID` | Used to validate the `aud` claim of ID tokens. |
 
+## Resetting test data
+
+`POST /api/admin/reset` wipes every account and everything attached to it. It is
+**disabled unless `CONNEXA_ADMIN_TOKEN` is set**, and the caller must send the same value
+in an `x-admin-token` header.
+
+```bash
+curl -X POST https://your-app.onrender.com/api/admin/reset \
+  -H "x-admin-token: YOUR_TOKEN"
+```
+
+On a host with an ephemeral disk a redeploy also clears the database, but this is
+repeatable and does not require a build.
+
 ## Health check
 
 ```
