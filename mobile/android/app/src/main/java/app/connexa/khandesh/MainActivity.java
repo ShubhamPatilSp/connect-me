@@ -63,6 +63,9 @@ public class MainActivity extends Activity {
     private static final String WEB_CLIENT_ID =
             "914191811414-j9i2t4h6b0egg9p4s2u1dl3q21oh4t94.apps.googleusercontent.com";
     private static final String SETUP_URL = "file:///android_asset/setup.html";
+
+    /** Production backend. Blank this to ship a build that asks for an address. */
+    private static final String DEFAULT_SERVER = "https://connexa-ct1k.onrender.com";
     private static final String TAG = "ConnexaAuth";
 
     private WebView web;
@@ -156,7 +159,13 @@ public class MainActivity extends Activity {
 
         String saved = prefs().getString(KEY_SERVER, "");
         if (saved == null || saved.isEmpty()) {
-            showSetup(null);
+            if (!DEFAULT_SERVER.isEmpty()) {
+                // Ship pointed at production: no setup screen on first launch.
+                prefs().edit().putString(KEY_SERVER, DEFAULT_SERVER).apply();
+                web.loadUrl(DEFAULT_SERVER);
+            } else {
+                showSetup(null);
+            }
         } else {
             web.loadUrl(saved);
         }

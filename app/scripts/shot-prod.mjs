@@ -1,0 +1,13 @@
+import { chromium } from "playwright-core";
+const EXE = "C:/Users/Shubh/AppData/Local/ms-playwright/chromium-1243/chrome-win64/chrome.exe";
+const browser = await chromium.launch({ executablePath: EXE });
+const page = await browser.newPage({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 2 });
+await page.goto("https://connexa-ct1k.onrender.com/", { waitUntil: "domcontentloaded", timeout: 90000 });
+await page.waitForTimeout(1500);
+await page.screenshot({ path: "shots/25-production.png" });
+console.log("title:", await page.title());
+await page.goto("https://connexa-ct1k.onrender.com/onboarding", { waitUntil: "domcontentloaded", timeout: 90000 });
+await page.waitForTimeout(1200);
+await page.screenshot({ path: "shots/26-production-onboarding.png" });
+console.log("onboarding ok");
+await browser.close();
