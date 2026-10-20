@@ -12,7 +12,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Exchange a Firebase ID token for a Connexa session.
+ * Exchange a Firebase ID token for a Connect Me session.
  *
  * Works for both identities: phone accounts (native Android SDK) and email
  * accounts (Firebase email/password). The token is verified against Google's

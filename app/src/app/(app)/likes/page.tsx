@@ -50,7 +50,7 @@ export default function LikesPage() {
     try {
       await api.post("/api/premium", { enable: true });
       await load();
-      showToast("Connexa Plus unlocked");
+      showToast("Connect Me Plus unlocked");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Could not unlock");
     }

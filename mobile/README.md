@@ -1,6 +1,6 @@
-# Connexa — Android client
+# Connect Me — Android client
 
-A native Android shell around the Connexa app, built with the Android Gradle
+A native Android shell around the Connect Me app, built with the Android Gradle
 Plugin and **no third-party dependencies** (no AndroidX, no Capacitor). The whole
 client is one activity plus a connect screen.
 
@@ -15,7 +15,7 @@ android/
 
 ## Why a WebView shell
 
-Connexa is server-rendered: auth, the matching engine, and chat all live behind
+Connect Me is server-rendered: auth, the matching engine, and chat all live behind
 `/api/*`. An APK cannot bundle a Node server, so the correct architecture is a
 native client that talks to a deployed instance — which is how every thin-client
 mobile app works. This shell hardens the WebView where a naive one fails:

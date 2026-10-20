@@ -22,7 +22,7 @@ export const POST = handler(async (req: Request) => {
     throw badRequest("Enter your date of birth as YYYY-MM-DD");
   }
   const age = ageFromBirthdate(birthdate);
-  if (age < 18) throw badRequest("Connexa is 18+. You must be at least 18 to join.");
+  if (age < 18) throw badRequest("Connect Me is 18+. You must be at least 18 to join.");
   if (age > 90) throw badRequest("Please check your date of birth");
 
   const gender = String(body.gender ?? "");
@@ -32,7 +32,7 @@ export const POST = handler(async (req: Request) => {
   if (!SEEKING.includes(seeking as (typeof SEEKING)[number])) throw badRequest("Pick who you'd like to meet");
 
   const cityId = String(body.cityId ?? "");
-  if (!CITY_IDS.includes(cityId)) throw badRequest("Connexa is only available inside Khandesh");
+  if (!CITY_IDS.includes(cityId)) throw badRequest("Connect Me is only available inside Khandesh");
 
   const intent = body.intent === undefined ? null : String(body.intent);
   if (intent !== null && !INTENTS.includes(intent as (typeof INTENTS)[number])) {

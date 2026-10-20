@@ -3,10 +3,10 @@ import "./globals.css";
 import "./ui.css";
 
 export const metadata: Metadata = {
-  title: "Connexa — Khandesh only",
+  title: "Connect Me — Khandesh only",
   description:
-    "Connexa is a dating app built for Khandesh. Real people from Jalgaon, Dhule and Nandurbar — close enough to actually meet.",
-  applicationName: "Connexa",
+    "Connect Me is a dating app built for Khandesh. Real people from Jalgaon, Dhule and Nandurbar — close enough to actually meet.",
+  applicationName: "Connect Me",
   formatDetection: { telephone: false },
 };
 

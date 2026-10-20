@@ -1,4 +1,4 @@
-# Deploying Connexa
+# Deploying Connect Me
 
 The APK is a client. It needs a backend that is reachable 24/7 over HTTPS — that is the
 only thing standing between the current build and a real app.

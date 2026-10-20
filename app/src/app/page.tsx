@@ -21,7 +21,7 @@ export default async function LandingPage() {
           <span className={styles.brandMark}>
             <Icon name="heart-filled" size={15} />
           </span>
-          Connexa
+          Connect Me
         </span>
       </header>
 

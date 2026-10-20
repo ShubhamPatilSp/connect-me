@@ -68,7 +68,7 @@ export const REPORT_REASONS = [
 ] as const;
 
 export const BRAND = {
-  name: "Connexa",
+  name: "Connect Me",
   tagline: "Khandesh only. Real people, close by.",
   region: "Khandesh",
 } as const;

@@ -63,7 +63,7 @@ export default function SettingsPage() {
       await api.post("/api/premium", { enable: !data.user.isPremium });
       const res = await api.get<MeResponse>("/api/me");
       setData(res);
-      showToast(res.user.isPremium ? "Connexa Plus active" : "Back to the free plan");
+      showToast(res.user.isPremium ? "Connect Me Plus active" : "Back to the free plan");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Could not change plan");
     }
@@ -100,7 +100,7 @@ export default function SettingsPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <Icon name="sparkle" size={17} />
             <span style={{ fontWeight: 700, fontSize: 15.5 }}>
-              {data?.user.isPremium ? "Connexa Plus is active" : "Connexa Plus"}
+              {data?.user.isPremium ? "Connect Me Plus is active" : "Connect Me Plus"}
             </span>
           </div>
           <p className="muted" style={{ fontSize: 13, margin: "0 0 14px" }}>
@@ -210,14 +210,14 @@ export default function SettingsPage() {
       </div>
 
       <p className="dim" style={{ textAlign: "center", fontSize: 11.5, padding: "0 24px 28px" }}>
-        Connexa v1.0 · Built for Khandesh · 18+
+        Connect Me v1.0 · Built for Khandesh · 18+
       </p>
 
       <Sheet
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
         title="Discovery preferences"
-        subtitle="Connexa never shows anyone outside Khandesh."
+        subtitle="Connect Me never shows anyone outside Khandesh."
       >
         <div style={{ marginBottom: 22 }}>
           <div className="slider-row">

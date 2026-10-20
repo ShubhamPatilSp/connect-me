@@ -1,4 +1,4 @@
-# Connexa — a dating app for Khandesh
+# Connect Me — a dating app for Khandesh
 
 A working, production-shaped dating app scoped to the Khandesh region of Maharashtra
 (Jalgaon, Dhule, Nandurbar). Dark, gradient-led interface modelled on the reference
@@ -51,7 +51,7 @@ adb install -r mobile/android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 The APK is a native shell (one Activity, no third-party libraries) around the web
-client. Connexa is server-rendered — auth, matching and chat are all `/api/*` calls —
+client. Connect Me is server-rendered — auth, matching and chat are all `/api/*` calls —
 so the phone needs to reach a running backend. On first launch the app asks for the
 address; enter your computer's LAN IP:
 

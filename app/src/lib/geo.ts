@@ -1,7 +1,7 @@
 /**
  * Khandesh region registry.
  *
- * Connexa is intentionally scoped to the Khandesh region of Maharashtra
+ * Connect Me is intentionally scoped to the Khandesh region of Maharashtra
  * (Jalgaon, Dhule and Nandurbar districts). Every profile, every discovery
  * query and every distance calculation is bounded by this registry — a user
  * physically outside Khandesh cannot complete onboarding, and discovery never
