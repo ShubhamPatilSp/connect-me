@@ -8,7 +8,10 @@
  * WebView. The API key is a public client identifier, not a secret.
  */
 
-const API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "";
+// Public client identifier, not a secret. Baked in so the Docker build (which
+// does not see .env.local) still produces a working bundle.
+const API_KEY =
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "AIzaSyAHT1sZNIw1oBXwCclN6s4Dm_3pisXFLCQ";
 
 const FRIENDLY: Record<string, string> = {
   EMAIL_EXISTS: "That email is already registered — try signing in",
