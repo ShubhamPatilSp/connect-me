@@ -73,14 +73,33 @@ export default function MePage() {
         <div className="profile-photo skeleton" />
       ) : (
         <>
-          <div className="profile-photo">
-            <Photo
-              src={profile.photos[0]}
-              seed={profile.id}
-              name={profile.name}
-              alt={`${profile.name}, ${profile.age}`}
-            />
-          </div>
+          {profile.photos.length === 0 ? (
+            <Link
+              href="/me/edit"
+              className="profile-photo"
+              style={{
+                display: "grid",
+                placeItems: "center",
+                textAlign: "center",
+                color: "var(--text-muted)",
+                gap: 10,
+              }}
+            >
+              <div>
+                <Icon name="camera" size={26} />
+                <div style={{ fontSize: 13, marginTop: 8 }}>No photo yet — tap to add one</div>
+              </div>
+            </Link>
+          ) : (
+            <div className="profile-photo">
+              <Photo
+                src={profile.photos[0]}
+                seed={profile.id}
+                name={profile.name}
+                alt={`${profile.name}, ${profile.age}`}
+              />
+            </div>
+          )}
 
           <div className="stat-strip">
             <div className="stat">

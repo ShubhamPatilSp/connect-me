@@ -157,7 +157,7 @@ export function Photo({ src, seed, name, alt, className, variant = "card" }: Pho
     // A slow or blocked CDN should never leave an empty tile on screen.
     const timer = setTimeout(() => {
       setStatus((current) => (current === "loading" ? "error" : current));
-    }, 3000);
+    }, 8000);
     return () => clearTimeout(timer);
   }, [src]);
 
