@@ -1,10 +1,8 @@
 /**
  * Deterministic seed data.
  *
- * Seeds only when the `users` table is empty, so a fresh clone boots straight
- * into a populated product: 36 Khandesh profiles, a demo account with six
- * inbound likes and three live conversations. The PRNG is fixed so every
- * machine produces the same dataset.
+ * Seeds local development with deterministic sample profiles. Production
+ * deployments should use real signups instead of generated accounts.
  */
 
 import type { Database } from "./db";
@@ -110,8 +108,6 @@ const MEN: SeedPerson[] = [
   { name: "Vishal Bhole", gender: "man", age: 32, cityId: "amalner", job: "Factory Owner", height: 178, intent: "marriage", cluster: "social", bio: "Amalner's looms, my family's trade. Looking for something real, not a timepass.", promptAnswer: "Honesty about what you actually want.", verified: true, photo: 18 },
 ];
 
-const DEMO_PHONE = "+919000000001";
-
 /** Stable placeholder portraits. The client falls back to generated art if these fail. */
 const photoUrl = (gender: "woman" | "man", n: number): string =>
   `/seed/${gender === "woman" ? "w" : "m"}${String(n).padStart(2, "0")}.jpg`;
@@ -150,26 +146,11 @@ export function seedIfEmpty(db: Database): void {
 
   db.exec("BEGIN");
   try {
-    // ── Demo account ──────────────────────────────────────────────────────
-    const demoCity = CITY_BY_ID.get("jalgaon")!;
-    insertUser.run(
-      "u_demo", DEMO_PHONE, "Rohan Patil", birthdateFor(27), "man", "women",
-      demoCity.id, demoCity.lat, demoCity.lng,
-      "Jalgaon based, building things on the internet. Looking for someone to split a plate of kanda bhaji with.",
-      "Product Designer", 178, "longterm", 1, 1, t - 120, t - 30 * DAY,
-    );
-    insertPhoto.run("u_demo", photoUrl("man", 1), 0);
-    insertPhoto.run("u_demo", photoUrl("man", 2), 1);
-    for (const tag of ["Street Food", "Bike Rides", "Music", "Photography", "Marathi Cinema", "Chai"]) {
-      insertInterest.run("u_demo", tag);
-    }
-    insertPrompt.run("u_demo", PROMPTS[0], "Bike to Ajanta early, misal in the afternoon, home by 8.", 0);
-
     // ── Seeded population ─────────────────────────────────────────────────
     const people = [...WOMEN, ...MEN];
     people.forEach((p, i) => {
       const id = idFor(i);
-      const city = CITY_BY_ID.get(p.cityId) ?? demoCity;
+      const city = CITY_BY_ID.get(p.cityId) ?? CITY_BY_ID.get("jalgaon")!;
       const jitterLat = city.lat + (rand() - 0.5) * 0.06;
       const jitterLng = city.lng + (rand() - 0.5) * 0.06;
       const lastActive = t - Math.floor(rand() * 6 * DAY) - 300;
@@ -192,76 +173,6 @@ export function seedIfEmpty(db: Database): void {
       }
 
       insertPrompt.run(id, PROMPTS[i % PROMPTS.length], p.promptAnswer, 0);
-    });
-
-    // ── Inbound likes for the demo account ────────────────────────────────
-    const swipe = db.prepare(
-      "INSERT OR IGNORE INTO swipes (swiper_id, target_id, action, created_at) VALUES (?, ?, ?, ?)",
-    );
-    const womenIds = WOMEN.map((_, i) => idFor(i));
-    const admirers = [0, 2, 5, 7, 12, 16];
-    admirers.forEach((idx, k) => {
-      swipe.run(womenIds[idx], "u_demo", k === 0 ? "super" : "like", t - (k + 1) * 3600);
-    });
-
-    // ── Three live matches with history ───────────────────────────────────
-    const insertMatch = db.prepare(
-      `INSERT INTO matches (id, user_a, user_b, created_at, last_message_at)
-       VALUES (?, ?, ?, ?, ?)`,
-    );
-    const insertMessage = db.prepare(
-      "INSERT INTO messages (match_id, sender_id, body, created_at, read_at) VALUES (?, ?, ?, ?, ?)",
-    );
-
-    const conversations: Array<{
-      otherId: string;
-      ageHours: number;
-      messages: Array<[0 | 1, string, number]>;
-    }> = [
-      {
-        otherId: womenIds[2],
-        ageHours: 50,
-        messages: [
-          [0, "Okay your prompt about the Ajanta ride got me. How early is early?", 49],
-          [1, "Before the tea stalls open. That's the only rule.", 48.5],
-          [0, "Bold. I respect it. Do you actually wake up or is this a personality?", 47],
-          [1, "I set three alarms. Two of them are lies.", 46.2],
-          [0, "That's the most honest thing anyone's said to me on this app.", 45.8],
-        ],
-      },
-      {
-        otherId: womenIds[5],
-        ageHours: 20,
-        messages: [
-          [0, "Your interior work is genuinely good. That Amalner project?", 19],
-          [1, "Thank you! That one took four months and one nervous breakdown.", 18.4],
-          [0, "Worth it. The light in that living room is doing a lot of work.", 17.9],
-        ],
-      },
-      {
-        otherId: womenIds[9],
-        ageHours: 3,
-        messages: [[0, "Pachora food tour — when are we doing this?", 2.5]],
-      },
-    ];
-
-    conversations.forEach((c, i) => {
-      const matchId = `m_${i + 1}`;
-      const matchedAt = t - c.ageHours * 3600;
-      const lastAt = t - c.messages[c.messages.length - 1][2] * 3600;
-      const [a, b] = ["u_demo", c.otherId].sort();
-      insertMatch.run(matchId, a, b, matchedAt, lastAt);
-      swipe.run("u_demo", c.otherId, "like", matchedAt);
-      swipe.run(c.otherId, "u_demo", "like", matchedAt - 60);
-      c.messages.forEach(([who, body, hoursAgo]) => {
-        insertMessage.run(
-          matchId,
-          who === 0 ? "u_demo" : c.otherId,
-          body,
-          t - hoursAgo * 3600,
-          who === 0 ? t - hoursAgo * 3600 + 300 : null,
-        );
-      });
     });
 
     db.exec("COMMIT");

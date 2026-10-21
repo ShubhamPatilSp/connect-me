@@ -5,12 +5,24 @@ import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/icons";
 import { FilterSheet, type FilterPrefs } from "@/components/FilterSheet";
+import { LocationPicker, type LocationValue } from "@/components/LocationPicker";
+import { Sheet } from "@/components/overlays";
 import { api } from "@/lib/client/api";
 import { useToast } from "@/lib/client/hooks";
 import type { Profile } from "@/lib/types";
 
 interface MeResponse {
-  user: { id: string; name: string; phone: string | null; email: string | null; isPremium: boolean; photoVerified: boolean };
+  user: {
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    cityId: string;
+    lat: number;
+    lng: number;
+    isPremium: boolean;
+    photoVerified: boolean;
+  };
   profile: Profile;
   prefs: { ageMin: number; ageMax: number; distanceKm: number; verifiedOnly: boolean };
 }
@@ -19,8 +31,11 @@ export default function SettingsPage() {
   const router = useRouter();
   const [data, setData] = useState<MeResponse | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [prefs, setPrefs] = useState({ ageMin: 21, ageMax: 40, distance: 60, verifiedOnly: false });
+  const [prefs, setPrefs] = useState({ ageMin: 21, ageMax: 40, distance: 100, verifiedOnly: false });
   const [saving, setSaving] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationSaving, setLocationSaving] = useState(false);
+  const [location, setLocation] = useState<LocationValue | null>(null);
   const [toast, showToast] = useToast();
 
   useEffect(() => {
@@ -28,6 +43,11 @@ export default function SettingsPage() {
       .get<MeResponse>("/api/me")
       .then((res) => {
         setData(res);
+        setLocation({
+          label: res.profile.cityName,
+          lat: res.user.lat,
+          lng: res.user.lng,
+        });
         setPrefs({
           ageMin: res.prefs.ageMin,
           ageMax: res.prefs.ageMax,
@@ -48,12 +68,42 @@ export default function SettingsPage() {
         prefDistanceKm: next.distance,
         prefVerifiedOnly: next.verifiedOnly,
       });
+      const updated = await api.get<MeResponse>("/api/me");
+      setData(updated);
       setFiltersOpen(false);
       showToast("Preferences saved");
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Could not save");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveLocation = async () => {
+    if (!location) {
+      showToast("Choose a location first");
+      return;
+    }
+    setLocationSaving(true);
+    try {
+      await api.patch("/api/me", {
+        cityId: location.label,
+        lat: location.lat,
+        lng: location.lng,
+      });
+      const updated = await api.get<MeResponse>("/api/me");
+      setData(updated);
+      setLocation({
+        label: updated.profile.cityName,
+        lat: updated.user.lat,
+        lng: updated.user.lng,
+      });
+      setLocationOpen(false);
+      showToast("Location updated");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Could not update location");
+    } finally {
+      setLocationSaving(false);
     }
   };
 
@@ -179,15 +229,15 @@ export default function SettingsPage() {
           <button
             className="list-row"
             style={{ width: "100%" }}
-            onClick={() => showToast("Only Khandesh cities are supported")}
+            onClick={() => setLocationOpen(true)}
           >
             <span className="row-icon">
               <Icon name="pin" size={17} />
             </span>
             <span style={{ flex: 1, textAlign: "left" }}>
-              <span style={{ display: "block", fontWeight: 600, fontSize: 14.5 }}>Region</span>
+              <span style={{ display: "block", fontWeight: 600, fontSize: 14.5 }}>Location</span>
               <span style={{ display: "block", fontSize: 12.5, color: "var(--text-dim)" }}>
-                Jalgaon · Dhule · Nandurbar
+                {data?.profile.cityName ?? "…"} · Tap to change
               </span>
             </span>
           </button>
@@ -210,7 +260,7 @@ export default function SettingsPage() {
       </div>
 
       <p className="dim" style={{ textAlign: "center", fontSize: 11.5, padding: "0 24px 28px" }}>
-        Connect Me v1.0 · Built for Khandesh · 18+
+        Connect Me v1.0 · Meet people nearby · 18+
       </p>
 
       <FilterSheet
@@ -223,6 +273,23 @@ export default function SettingsPage() {
           await savePrefs(next);
         }}
       />
+
+      <Sheet
+        open={locationOpen}
+        onClose={() => setLocationOpen(false)}
+        title="Your location"
+        subtitle="Choose where discovery should be centered."
+      >
+        <LocationPicker value={location} onChange={setLocation} />
+        <button
+          className="btn btn-primary btn-block"
+          style={{ marginTop: 18 }}
+          onClick={() => void saveLocation()}
+          disabled={locationSaving || !location}
+        >
+          {locationSaving ? "Saving…" : "Save location"}
+        </button>
+      </Sheet>
 
       {toast && <div className="toast">{toast}</div>}
     </>

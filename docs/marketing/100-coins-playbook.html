@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Hundred Coins — Connect Me · Khandesh Growth Playbook</title>
+<style>
+  :root{
+    --bg:#08080a;
+    --surface:#101013;
+    --surface-2:#16161a;
+    --surface-3:#1d1d22;
+    --line:rgba(255,255,255,.08);
+    --line-2:rgba(255,255,255,.16);
+    --text:#f6f6f7;
+    --muted:#a0a0aa;
+    --dim:#6a6a75;
+    --brand:#ff5a2b;
+    --brand-deep:#8f1a12;
+    --gold:#e8b34b;
+    --gold-2:#f7d488;
+    --green:#35c46b;
+    --danger:#ef4444;
+    --violet:#7c5cff;
+    --r:18px;
+    --max:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:
+      radial-gradient(120% 55% at 50% -10%, rgba(255,90,43,.16) 0%, transparent 55%),
+      radial-gradient(80% 40% at 90% 20%, rgba(232,179,75,.07) 0%, transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+    font-size:15px;
+    line-height:1.62;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--max);margin:0 auto;padding:0 28px 120px}
+  a{color:inherit}
+
+  /* ── cover ─────────────────────────────────────────── */
+  .cover{padding:88px 0 56px;border-bottom:1px solid var(--line)}
+  .eyebrow{
+    font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--dim);display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--brand)}
+  h1{
+    font-size:clamp(44px,7vw,84px);line-height:.96;letter-spacing:-.045em;
+    font-weight:800;margin:22px 0 0;
+    background:linear-gradient(180deg,#fff 0%,#cfcfd6 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  h1 em{
+    font-style:normal;
+    background:linear-gradient(100deg,var(--gold-2),var(--brand));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .sub{font-size:19px;color:var(--muted);max-width:620px;margin:20px 0 0;line-height:1.5}
+  .meta{
+    display:flex;flex-wrap:wrap;gap:26px;margin-top:34px;
+    font-size:12px;color:var(--dim);letter-spacing:.06em;text-transform:uppercase;
+  }
+  .meta b{color:var(--text);font-weight:600}
+
+  /* ── sections ──────────────────────────────────────── */
+  section{padding:64px 0;border-bottom:1px solid var(--line)}
+  .num{
+    font-size:11px;letter-spacing:.2em;color:var(--brand);font-weight:700;
+    display:block;margin-bottom:12px;
+  }
+  h2{font-size:clamp(26px,3.4vw,36px);line-height:1.12;letter-spacing:-.03em;margin:0 0 8px;font-weight:750}
+  .lede{color:var(--muted);font-size:16px;max-width:720px;margin:0 0 34px}
+
+  h3{font-size:17px;letter-spacing:-.01em;margin:0 0 8px;font-weight:650}
+  p{margin:0 0 16px}
+  .small{font-size:13px;color:var(--dim)}
+
+  /* ── thesis ────────────────────────────────────────── */
+  .thesis{
+    font-size:clamp(22px,3vw,32px);line-height:1.32;letter-spacing:-.02em;
+    font-weight:600;max-width:860px;margin:0;
+  }
+  .thesis span{color:var(--gold-2)}
+
+  /* ── stat grid ─────────────────────────────────────── */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:14px;margin-top:8px}
+  .stat{
+    background:linear-gradient(180deg,var(--surface-2),var(--surface));
+    border:1px solid var(--line);border-radius:var(--r);padding:20px 20px 18px;
+    position:relative;overflow:hidden;
+  }
+  .stat::after{
+    content:"";position:absolute;inset:0 0 auto 0;height:2px;
+    background:linear-gradient(90deg,var(--brand),transparent 70%);opacity:.7;
+  }
+  .stat .v{font-size:30px;font-weight:750;letter-spacing:-.03em;line-height:1.05;color:var(--text)}
+  .stat .v.gold{color:var(--gold-2)}
+  .stat .k{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.45}
+  .stat .src{font-size:10.5px;color:var(--dim);margin-top:9px;letter-spacing:.04em;text-transform:uppercase}
+
+  /* ── blockers ──────────────────────────────────────── */
+  .blockers{display:grid;gap:12px}
+  .blocker{
+    display:grid;grid-template-columns:46px 1fr;gap:16px;align-items:start;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;
+  }
+  .blocker .n{
+    width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+    background:rgba(255,90,43,.1);border:1px solid rgba(255,90,43,.28);
+    color:var(--brand);font-weight:700;font-size:14px;
+  }
+  .blocker h4{margin:0 0 4px;font-size:15px;font-weight:650}
+  .blocker p{margin:0;font-size:13.5px;color:var(--muted)}
+
+  /* ── flow ──────────────────────────────────────────── */
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:28px 0 6px}
+  .step{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
+    padding:16px 14px;position:relative;min-height:132px;
+  }
+  .step .i{font-size:10.5px;letter-spacing:.16em;color:var(--brand);font-weight:700}
+  .step .t{font-size:14px;font-weight:650;margin:8px 0 6px;line-height:1.25}
+  .step .d{font-size:12px;color:var(--dim);line-height:1.45}
+  .step:not(:last-child)::after{
+    content:"→";position:absolute;right:-13px;top:50%;transform:translateY(-50%);
+    color:var(--dim);font-size:13px;z-index:2;
+  }
+
+  /* ── inversion card ────────────────────────────────── */
+  .invert{
+    margin-top:26px;border-radius:22px;padding:1px;
+    background:linear-gradient(135deg,rgba(232,179,75,.55),rgba(255,90,43,.15) 45%,transparent 75%);
+  }
+  .invert-in{
+    background:linear-gradient(180deg,#15120e,#0d0d0f);border-radius:21px;padding:30px 32px;
+  }
+  .invert h3{font-size:22px;letter-spacing:-.02em;margin-bottom:10px}
+  .invert p{color:var(--muted);max-width:700px;margin-bottom:0}
+  .invert strong{color:var(--gold-2);font-weight:650}
+
+  /* ── two col ───────────────────────────────────────── */
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:8px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+  .card h4{margin:0 0 10px;font-size:14px;letter-spacing:.02em}
+  ul{margin:0;padding-left:18px}
+  li{margin-bottom:9px;color:var(--muted);font-size:14px}
+  li b{color:var(--text);font-weight:600}
+
+  /* ── table ─────────────────────────────────────────── */
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13.5px}
+  th{
+    text-align:left;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);font-weight:600;padding:0 12px 10px;border-bottom:1px solid var(--line-2);
+  }
+  td{padding:13px 12px;border-bottom:1px solid var(--line);color:var(--muted);vertical-align:top}
+  td:first-child{color:var(--text);font-weight:600}
+  tr:last-child td{border-bottom:none}
+  .ok{color:var(--green)}
+  .no{color:var(--danger)}
+
+  /* ── timeline ──────────────────────────────────────── */
+  .tl{display:grid;gap:0;margin-top:10px;border-left:1px solid var(--line-2);padding-left:26px}
+  .ph{position:relative;padding:0 0 30px}
+  .ph::before{
+    content:"";position:absolute;left:-31px;top:5px;width:9px;height:9px;border-radius:50%;
+    background:var(--brand);box-shadow:0 0 0 4px rgba(255,90,43,.14);
+  }
+  .ph .when{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);font-weight:700}
+  .ph .what{font-size:16px;font-weight:650;margin:5px 0 8px}
+  .ph ul{margin:0}
+
+  /* ── copy bank ─────────────────────────────────────── */
+  .copy{
+    background:var(--surface-2);border:1px solid var(--line);border-radius:14px;
+    padding:18px 20px;margin-bottom:10px;
+  }
+  .copy .mr{font-size:18px;font-weight:650;letter-spacing:-.01em;line-height:1.4}
+  .copy .en{font-size:12.5px;color:var(--dim);margin-top:6px;font-style:italic}
+  .copy .use{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand);margin-top:10px;font-weight:600}
+
+  /* ── callout ───────────────────────────────────────── */
+  .call{
+    border-left:2px solid var(--brand);padding:2px 0 2px 20px;margin:24px 0;
+    color:var(--muted);font-size:14.5px;
+  }
+  .call b{color:var(--text)}
+
+  .kill{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.22);border-radius:var(--r);padding:22px}
+  .kill h4{color:#ff8b8b;margin:0 0 10px;font-size:14px}
+
+  footer{padding:52px 0 0;color:var(--dim);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+  @media (max-width:860px){
+    .flow{grid-template-columns:1fr 1fr}
+    .step:not(:last-child)::after{display:none}
+    .two{grid-template-columns:1fr}
+    .wrap{padding:0 18px 80px}
+  }
+  @media (max-width:520px){
+    .flow{grid-template-columns:1fr}
+    .blocker{grid-template-columns:1fr}
+    .cover{padding:56px 0 40px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ══ COVER ══ -->
+  <div class="cover">
+    <div class="eyebrow">Connect Me · Khandesh Growth Playbook</div>
+    <h1>The Hundred<br><em>Coins</em></h1>
+    <p class="sub">A women-first launch system for Jalgaon, Dhule and Nandurbar — built on the one asset Tinder can never copy: a girl's best friend handing her something.</p>
+    <div class="meta">
+      <div><b>Scope</b> &nbsp;28 towns · 3 districts</div>
+      <div><b>Phase 1 budget</b> &nbsp;₹2.24 L</div>
+      <div><b>Target</b> &nbsp;100 verified women / 6 weeks</div>
+      <div><b>Version</b> &nbsp;v1 · Oct 2026</div>
+    </div>
+  </div>
+
+  <!-- ══ 00 THESIS ══ -->
+  <section>
+    <span class="num">00 — THESIS</span>
+    <p class="thesis">You cannot advertise a dating app to a girl in Jalgaon. The ad itself is the risk. What you can do is give <span>a hundred of them a private reason to say yes</span> — and then let four lakh people find out second-hand.</p>
+    <div class="call">
+      Every dating app in India dies on the same number: the male-to-female ratio. Not downloads, not ARPU, not brand love. Ratio. Everything below is engineered backwards from that one number.
+    </div>
+  </section>
+
+  <!-- ══ 00B PLAIN WORDS ══ -->
+  <section>
+    <span class="num">00B — IN PLAIN WORDS</span>
+    <h2>Agar sirf ek paragraph padhna ho</h2>
+    <p class="lede">Ignore the jargon. This is the whole idea, in the language you'd use at a chai stall.</p>
+
+    <div class="invert" style="margin-top:0">
+      <div class="invert-in">
+        <p style="font-size:19px;line-height:1.55;color:#e8e8ec;margin:0 0 14px">
+          Dating app pe ladke bahut zyada, ladkiyan bahut kam. Ladkiyan aati hi nahi — kyunki dar lagta hai ki koi dekh lega, ya koi jaan-pehchan wala mil jayega.
+        </p>
+        <p style="font-size:19px;line-height:1.55;color:#e8e8ec;margin:0">
+          To hum app ko sabke liye kholte hi nahi. <strong>Pehle sirf 100 ladkiyan andar. Har ek ko ek chhota brass ka sikka. Wahi sikka uski entry hai.</strong> Aur wo sikka hum bechte nahi — ladkiyan aapas mein baantti hain.
+        </p>
+      </div>
+    </div>
+
+    <div style="display:grid;gap:10px;margin-top:22px">
+      <div class="blocker"><div class="n">1</div><div><h4>Sikka banwao</h4><p>100 sikka, brass ka, ₹65 ek. Aage QR, peeche number 001–100. Total ₹15,000. Bas.</p></div></div>
+      <div class="blocker"><div class="n">2</div><div><h4>10 ladkiyan chuno</h4><p>Jo mohalle mein jaani-maani hain — mehendi wali, parlour wali, photographer, college senior, Zumba teacher. Har ek ko 10-10 sikka.</p></div></div>
+      <div class="blocker"><div class="n">3</div><div><h4>Wo apni dost ko deti hai</h4><p>Hum kuch nahi bechte. Wo us ladki ko deti hai jiski wo guarantee le sakti hai. Ek line: "ispe mera naam hai, sirf unko dena jinko tu jaanti hai."</p></div></div>
+      <div class="blocker"><div class="n">4</div><div><h4>Sikka scan → app khul gaya</h4><p>Parlour mein free photo khichwao, verified badge mil gaya. Sikka hi uska ID hai. Coin nahi, to profile nahi.</p></div></div>
+      <div class="blocker"><div class="n">5</div><div><h4>Ek party — sirf ladkiyon ki</h4><p>Rooftop, mehendi, music. Baaki 40 sikka stage se baant do. 100 ladkiyan ek room mein = newspaper wale khud aa jayenge, paisa nahi lagega.</p></div></div>
+      <div class="blocker"><div class="n">6</div><div><h4>Ab ladke</h4><p>Wo register nahi kar sakte. Waiting room mein baithte hain. Andar aane ke liye kisi ladki ka code chahiye. Har ladki ke paas 3 code = 300 ladke.</p></div></div>
+    </div>
+
+    <div class="two" style="margin-top:22px">
+      <div class="card">
+        <h4>Kyun kaam karega</h4>
+        <ul>
+          <li>Ladki ko kuch <b>prove nahi</b> karna. Sikka purse mein, kisi ko pata nahi.</li>
+          <li>Usko <b>pata hai andar kaun hai</b> — kyunki uski dost ne bulaya.</li>
+          <li>Ladke <b>line mein</b> hain, isliye usko reply milta hai. Reply mile to wo rukti hai.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Sabse chhoti line</h4>
+        <p style="font-size:15px;color:#e8e8ec;margin:0;line-height:1.6">Hum app nahi bech rahe. Hum 100 ladkiyon ko sikka de rahe hain, aur wo sikka unki dost ko dena hai. Ladke baad mein aayenge — aur tabhi jab koi ladki haan kahe.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 01 DATA ══ -->
+  <section>
+    <span class="num">01 — THE NUMBERS THAT DECIDE THIS</span>
+    <h2>What the market actually says</h2>
+    <p class="lede">Pulled from Livemint, Financial Express, Tracxn coverage, the Vmobify 500K-user case study, and an ISR paper on Indian matrimony-platform gender dynamics. Read the "so what" column — that is the strategy.</p>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="v">7:1 → 9:1</div>
+        <div class="k">Male-to-female ratio on Indian dating apps. The single number that breaks the product.</div>
+        <div class="src">Industry consensus</div>
+      </div>
+      <div class="stat">
+        <div class="v">40×</div>
+        <div class="k">More expressions of interest a woman receives vs a man — concentrated in her first few days. Flood, then churn.</div>
+        <div class="src">Karmegam et al. · Info. Systems Research</div>
+      </div>
+      <div class="stat">
+        <div class="v gold">₹22 vs ₹14</div>
+        <div class="k">Measured cost per install: women vs men. The premium is structural, not a failed campaign.</div>
+        <div class="src">Vmobify · 500K-user India case</div>
+      </div>
+      <div class="stat">
+        <div class="v">₹180 / ₹11</div>
+        <div class="k">Blended CAC for global players vs Fluttr's vernacular micro-transaction model.</div>
+        <div class="src">Financial Express</div>
+      </div>
+      <div class="stat">
+        <div class="v">65–70%</div>
+        <div class="k">Share of QuackQuack's new users coming from outside the metros.</div>
+        <div class="src">Livemint</div>
+      </div>
+      <div class="stat">
+        <div class="v">95%</div>
+        <div class="k">FRND's new users from non-metro India — on a voice-first, photo-free product.</div>
+        <div class="src">Company disclosure</div>
+      </div>
+      <div class="stat">
+        <div class="v gold">35–40%</div>
+        <div class="k">Paying rate on Arike (Malayalam) vs ~15% on Aisle's main app. Language verticals monetise 2×+ better.</div>
+        <div class="src">Livemint</div>
+      </div>
+      <div class="stat">
+        <div class="v">2,000</div>
+        <div class="k">Active women needed before a city counts as "live". 5,000 concentrated users = a network; 50,000 spread = nothing.</div>
+        <div class="src">Vmobify density rule</div>
+      </div>
+      <div class="stat">
+        <div class="v">90% / 51%</div>
+        <div class="k">Would attend a curated offline experience; 51% require the crowd to be vetted first.</div>
+        <div class="src">The League × YouGov</div>
+      </div>
+      <div class="stat">
+        <div class="v">38%</div>
+        <div class="k">Small-city users who want a month of chat before agreeing to meet. Speed is not the product here.</div>
+        <div class="src">QuackQuack · 11,678 users</div>
+      </div>
+      <div class="stat">
+        <div class="v">2.5×</div>
+        <div class="k">Conversion advantage of micro-influencers (5k–50k) over macro. Regional-language creators engage 35–40% higher.</div>
+        <div class="src">India influencer benchmarks</div>
+      </div>
+      <div class="stat">
+        <div class="v">+72%</div>
+        <div class="k">Lift in match efficiency from gender-gating alone — 25+ women: +103%, and +113% more women initiating.</div>
+        <div class="src">Indian platform A/B, two states</div>
+      </div>
+    </div>
+
+    <div class="call" style="margin-top:30px">
+      <b>The synthesis:</b> growth is in Bharat, but the money and the women are gated by <b>trust, not reach</b>. Every rupee spent on reach before trust is a rupee burned. And the only channel in a tier-3 city that manufactures trust at zero marginal cost is <b>one woman telling another</b>.
+    </div>
+  </section>
+
+  <!-- ══ 02 DIAGNOSIS ══ -->
+  <section>
+    <span class="num">02 — DIAGNOSIS</span>
+    <h2>Why a Jalgaon girl will not install this</h2>
+    <p class="lede">Four blockers, in order of severity. Note that none of them are "she doesn't want romance." She wants it more than you do. She just can't afford to be seen wanting it.</p>
+
+    <div class="blockers">
+      <div class="blocker">
+        <div class="n">1</div>
+        <div>
+          <h4>Visibility risk</h4>
+          <p>In a town of 5 lakh, a phone screen is a public document. A cousin sees the icon. A friend sees the Instagram follow. The cost of being spotted is not embarrassment — it's a year of family commentary.</p>
+        </div>
+      </div>
+      <div class="blocker">
+        <div class="n">2</div>
+        <div>
+          <h4>Recognition risk</h4>
+          <p>Metro anonymity doesn't exist here. Every profile is somebody's neighbour, somebody's cousin, somebody's tuition sir. A bad match isn't a bad date — it's a story that circulates for six months.</p>
+        </div>
+      </div>
+      <div class="blocker">
+        <div class="n">3</div>
+        <div>
+          <h4>Zero social proof</h4>
+          <p>"Who else is on it?" is the first question, and the only acceptable answer is a name she knows. No ad can answer it. A friend can answer it in one sentence.</p>
+        </div>
+      </div>
+      <div class="blocker">
+        <div class="n">4</div>
+        <div>
+          <h4>Marriage-market cost</h4>
+          <p>Being publicly "on a dating app" reads as a discount on her rishta value. This is unfair and completely real, and it means the product must be <b>private before it is public</b>.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="call">
+      <b>Design consequence:</b> the acquisition channel cannot require her to be seen wanting it. Which rules out Instagram ads, campus banners, and "download our dating app" reels. It does not rule out a friend quietly handing her a coin.
+    </div>
+  </section>
+
+  <!-- ══ 03 THE IDEA ══ -->
+  <section>
+    <span class="num">03 — THE IDEA</span>
+    <h2>शंभर नाणी — The Hundred Coins</h2>
+    <p class="lede">One hundred numbered brass coins. One hundred verified women. Zero men until the hundredth coin is placed. The coin is the invite, the key, the status object, and the ad — all at once.</p>
+
+    <div class="flow">
+      <div class="step">
+        <div class="i">STEP 01</div>
+        <div class="t">Ten Coin Keepers</div>
+        <div class="d">Hand-pick 10 women with reach: mehendi artist, parlour owner, Zumba trainer, wedding photographer, girls'-college senior, boutique owner, tuition madam, nurse, RJ, meme-page admin. Each gets 10 coins.</div>
+      </div>
+      <div class="step">
+        <div class="i">STEP 02</div>
+        <div class="t">Ten private gifts</div>
+        <div class="d">A keeper never "promotes" you. She hands a coin to a girl she'd personally vouch for, in person, with one sentence. That sentence is the entire campaign.</div>
+      </div>
+      <div class="step">
+        <div class="i">STEP 03</div>
+        <div class="t">Coin = verified profile</div>
+        <div class="d">Serial number on the back, QR on the front. Scan → onboarding → free professional photo shoot at a partner parlour → verified badge. No coin, no profile.</div>
+      </div>
+      <div class="step">
+        <div class="i">STEP 04</div>
+        <div class="t">Coin Night</div>
+        <div class="d">Women-only evening at a Jalgaon rooftop. Mehendi, live music, photos, the last 40 coins handed out in the room. This is the press moment — free, because 100 women in one room is a story.</div>
+      </div>
+      <div class="step">
+        <div class="i">STEP 05</div>
+        <div class="t">Men unlock</div>
+        <div class="d">On day 43 the app opens to men — but only with a vouch code from a coin holder. 100 women × 3 codes = 300 men. A curated 1:3 ratio instead of the market's 1:8.</div>
+      </div>
+    </div>
+
+    <div class="invert">
+      <div class="invert-in">
+        <h3>The inversion: in Khandesh, a man gets in only if a woman says yes.</h3>
+        <p>Every dating app makes women the product and men the customer. Flip it once, loudly, and you own the story. A man cannot register — he sits in a <strong>public waiting room</strong> until a coin holder spends one of her three codes on him. Codes are tied to her account, revocable, and never transferable. <strong>She is not the supply. She is the gate.</strong></p>
+      </div>
+    </div>
+
+    <div class="two" style="margin-top:14px">
+      <div class="card">
+        <h4>Why it works on her</h4>
+        <ul>
+          <li><b>Private by default.</b> A brass coin in a purse is invisible. Nothing to explain to anyone.</li>
+          <li><b>Status, not shame.</b> She's #037 of a hundred, not "a girl on a dating app".</li>
+          <li><b>Social proof built in.</b> The person who gave it to her is the proof.</li>
+          <li><b>Control.</b> She decides which men even exist in the pool. That has never been offered to her before.</li>
+          <li><b>Free forever.</b> Unlimited likes, no blur, no paywall on her side. Ever.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>Why it works on him</h4>
+        <ul>
+          <li><b>Scarcity.</b> 300 seats in a district of 40 lakh. Men chase what is closed.</li>
+          <li><b>Status.</b> Being vouched means a woman put her name on him. He will behave, because she can revoke.</li>
+          <li><b>A real chance.</b> At 1:3 he might actually get a reply, which no Jalgaon man has ever experienced on Tinder.</li>
+          <li><b>A story to tell.</b> "मला एका मुलीने आत घेतलं" is a better chai-stall line than "मी Tinder वर आहे".</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 04 WHY NOT THE OBVIOUS ══ -->
+  <section>
+    <span class="num">04 — WHY NOT THE OBVIOUS</span>
+    <h2>Everything you were about to do, and why it fails here</h2>
+    <table>
+      <thead>
+        <tr><th style="width:26%">Play</th><th style="width:37%">Why it fails in Khandesh</th><th>What it costs you</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Campus ambassadors</td>
+          <td>A 20-year-old girl publicly repping a dating app on a Jalgaon campus is trading her reputation for ₹5,000. The good ones will refuse; the ones who accept are not credible.</td>
+          <td>₹60k + your credibility</td>
+        </tr>
+        <tr>
+          <td>Meta / Instagram ads to women</td>
+          <td>Puts her in a visible targeting pool, no density, no social proof, and the creative has to say "dating" out loud. Female CPI ₹22 and rising with zero trust transfer.</td>
+          <td>₹40k for ~1,500 installs that churn</td>
+        </tr>
+        <tr>
+          <td>"Free for women"</td>
+          <td>Doesn't touch stigma. Attracts promo-hunters who leave when the promo does. Aisle and Gleeden both learned this.</td>
+          <td>Free, and worthless</td>
+        </tr>
+        <tr>
+          <td>Influencer blast</td>
+          <td>Macro creators convert 2.5× worse than micro, and a Jalgaon audience can smell a paid post from the thumbnail.</td>
+          <td>₹1.5L+ for noise</td>
+        </tr>
+        <tr>
+          <td class="ok">The coin</td>
+          <td class="ok">Private, status-conferring, friend-delivered, physically deniable, and it manufactures the exact ratio the product needs.</td>
+          <td class="ok">₹15,000 for the coins</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="small" style="margin-top:18px">The uncomfortable read: you are not buying installs. You are buying <b>100 specific women whose names other women trust</b>. That is a recruitment problem, and recruitment is done one handshake at a time.</p>
+  </section>
+
+  <!-- ══ 05 SUPPORT ══ -->
+  <section>
+    <span class="num">05 — THE SUPPORT PLAYS</span>
+    <h2>Four things to run in parallel</h2>
+    <p class="lede">None of these are the idea. All of them are force multipliers on it. Do them only after the coins are in motion.</p>
+
+    <div class="two">
+      <div class="card">
+        <h4>A · Marathi ASO land-grab</h4>
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 10px">Cost: ~₹8,000 and two days. Return: first-page rankings on dozens of terms with literally zero competition — "जळगाव डेटिंग", "खानदेश मॅट्रिमोनी", "धुळे मित्र", "Bhet Khandesh". The Vmobify case study calls vernacular ASO "nearly free distribution". Nobody in your category has done it.</p>
+        <p class="small">Do this in week 1. It compounds while everything else runs.</p>
+      </div>
+      <div class="card">
+        <h4>B · Parlour & boutique network</h4>
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 10px">12 nodes across the three districts. Mirror sticker + QR + a free profile shoot. Owner earns ₹100 per verified woman. A parlour is the perfect distribution node: high trust, 90-minute dwell time, and the owner talks to 40 women a week. These are your coin distribution points after Coin Night.</p>
+        <p class="small">₹6,000 setup, ₹100/verified woman. Cheapest trust you will ever buy.</p>
+      </div>
+      <div class="card">
+        <h4>C · Six micro-creators, not one star</h4>
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 10px">5k–50k followers, Marathi, real homes, normal lighting, no studio. Brief them on one thing only: <i>the coin, and the fact that men can't get in.</i> ₹7,000 each. Their job is not installs — it is making the coin recognisable so that when a friend hands one over, it already means something.</p>
+        <p class="small">₹42,000 · highest-leverage paid spend in the plan.</p>
+      </div>
+      <div class="card">
+        <h4>D · Rickshaw + one hoarding, local humour</h4>
+        <p style="font-size:13.5px;color:var(--muted);margin:0 0 10px">Five autos on the Jalgaon–Dhule route, ₹4,000/month each. One board on the ring road. Copy is a joke, not a pitch — Tinder's Northeast playbook proved local humour out-performs product messaging in non-metro. Run for a minimum of 3 months; these markets build memory by repetition, not frequency.</p>
+        <p class="small">₹40,000 for two months. Not for women — for the men's waiting room.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 06 PRODUCT ══ -->
+  <section>
+    <span class="num">06 — SHIP THESE FIRST</span>
+    <h2>Seven things to build before you spend ₹1</h2>
+    <p class="lede">The research is unambiguous: buying the scarce side into a broken receiving experience burns the most expensive users you will ever pay for. Your current build has block/report, region lock, verification filter and a 25-like daily cap. Here is what's missing.</p>
+
+    <table>
+      <thead><tr><th style="width:30%">Build</th><th>Why it is non-negotiable</th></tr></thead>
+      <tbody>
+        <tr><td>Vouch code system</td><td>Women hold 3 codes; men redeem to leave the waiting room. Codes bound to her account, revocable, single-use. This is the whole idea — without it the coin is just merch.</td></tr>
+        <tr><td>Public city counter</td><td>"जळगाव: 87/100 मुली · 41 मुलं प्रतीक्षेत" on the landing page. Scarcity must be visible or it isn't scarcity.</td></tr>
+        <tr><td>Disguise + panic hide</td><td>Neutral icon name, and a two-finger tap that swaps to a recipe screen instantly. No global app offers this. It is the single most requested thing a tier-3 woman will never ask for out loud.</td></tr>
+        <tr><td>First name + initial only</td><td>No surnames in discovery. Removes 80% of the recognition risk in a 5-lakh town.</td></tr>
+        <tr><td>Women unlimited, women unblurred</td><td>Remove the 25-like cap and the inbound blur for women permanently. Monetise men only. Non-negotiable and it should be on the store listing.</td></tr>
+        <tr><td>Women message first (toggle)</td><td>Bumble's India data shows women send 2× more first messages here. Make it the default for the founding 100, optional after.</td></tr>
+        <tr><td>Screenshot + screen-record block</td><td>On profile and chat. Cheap to build, and it's a headline in the store listing.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ══ 07 PLAN ══ -->
+  <section>
+    <span class="num">07 — 90 DAYS</span>
+    <h2>The calendar</h2>
+    <div class="tl">
+      <div class="ph">
+        <div class="when">Week 1–2 · Build & mint</div>
+        <div class="what">Coins in hand, product closed</div>
+        <ul>
+          <li>Ship the 7 builds above. Nothing else matters this fortnight.</li>
+          <li>Order 100 coins: 40mm brass, gold polish, serial 001–100 on the reverse, QR on the face. Die ₹7,500 + ₹65/coin.</li>
+          <li>Marathi store listing live. Icon and screenshots in Marathi first.</li>
+          <li>Sign 12 parlours. Hand each owner a sticker, a QR, and the ₹100 rate card.</li>
+        </ul>
+      </div>
+      <div class="ph">
+        <div class="when">Week 3–4 · The ten keepers</div>
+        <div class="what">Sixty coins, sixty handshakes</div>
+        <ul>
+          <li>Meet all 10 keepers individually. No group briefing, no deck. One conversation each, in person.</li>
+          <li>Give each 10 coins. Say the sentence: "ह्या दहा नाण्यांवर तुझं नाव आहे. ज्यांना तू खरंच ओळखते, त्यांनाच दे."</li>
+          <li>Target: 60 coins placed by day 28. If you're under 40, the keeper model is wrong — go parlour-only and don't look back.</li>
+          <li>Photoshoots running at partner parlours. Every woman leaves with 6 good photos, which she will use everywhere, forever.</li>
+        </ul>
+      </div>
+      <div class="ph">
+        <div class="when">Week 5–6 · Coin Night</div>
+        <div class="what">A hundred women in one room</div>
+        <ul>
+          <li>Rooftop buyout, women only, mehendi + live music + photographer. The last 40 coins handed out in the room, on stage, by number.</li>
+          <li>Invite three reporters and one local news channel. You are not pitching an app — you are covering an event.</li>
+          <li>Simultaneously open the men's waiting room. Counter goes live. Men can queue; they cannot enter.</li>
+          <li>Micro-creators post the same week, so the coin is already familiar when the news breaks.</li>
+        </ul>
+      </div>
+      <div class="ph">
+        <div class="when">Week 7–12 · Open the gate</div>
+        <div class="what">300 vouched men, then Dhule</div>
+        <ul>
+          <li>Coin holders spend their 3 codes. Men arrive pre-vetted by a woman who knows them.</li>
+          <li>Watch one number only: percentage of women who get a match within 7 days. Below 30% → slow the queue, widen the radius, do not spend more.</li>
+          <li>Rickshaws and hoarding go up now — aimed at men, with the waiting-room joke.</li>
+          <li>At 100/100 in Jalgaon, open <b>Dhule with coins 101–200</b>. Different city, different series, same ritual. City rivalry does the rest.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 08 MONEY ══ -->
+  <section>
+    <span class="num">08 — MONEY</span>
+    <h2>₹2.24 lakh, all in</h2>
+    <table>
+      <thead><tr><th>Line</th><th style="width:15%">Cost</th><th style="width:42%">Note</th></tr></thead>
+      <tbody>
+        <tr><td>100 custom brass coins</td><td>₹15,000</td><td>₹7,500 die + ₹65/coin. The single best rupee in this document.</td></tr>
+        <tr><td>Ten coin keepers</td><td>₹15,000</td><td>₹1,500 gift each + lifetime premium. Not a fee — a thank-you.</td></tr>
+        <tr><td>Coin Night</td><td>₹55,000</td><td>Venue, food for 100 @ ₹250, 2 mehendi artists, photo + video, decor, sound.</td></tr>
+        <tr><td>Marathi ASO + store assets</td><td>₹8,000</td><td>Translation, screenshots, keyword pass. Two days of work.</td></tr>
+        <tr><td>Parlour network setup</td><td>₹6,000</td><td>20 QR kits @ ₹300. Payouts (₹100/verified woman) come from the buffer.</td></tr>
+        <tr><td>Six micro-creators</td><td>₹42,000</td><td>₹7,000 each. Brief: the coin and the closed door, nothing else.</td></tr>
+        <tr><td>Rickshaws + one hoarding</td><td>₹40,000</td><td>5 autos × ₹4,000 × 2 months. Aimed at men.</td></tr>
+        <tr><td>Wedding-card style print run</td><td>₹18,000</td><td>5,000 invites to "the wedding of 100 couples who haven't met yet". Distributed at photographers, caterers, jewellers.</td></tr>
+        <tr><td>Buffer</td><td>₹25,000</td><td>Parlour payouts, overruns, the thing you didn't plan for.</td></tr>
+        <tr><td><b>Total</b></td><td><b>₹2,24,000</b></td><td>Cost per founding woman: <b>₹2,240</b>. That is deliberately expensive — you are buying a network, not installs.</td></tr>
+      </tbody>
+    </table>
+    <div class="call">
+      <b>The curve that matters:</b> coins 1–100 cost ₹2,240 each. Coins 101–200 in Dhule should cost under ₹600, because the ritual, the content, the parlours and the press template are already built. If Dhule isn't 4× cheaper, the playbook didn't transfer — stop and fix it before Nandurbar.
+    </div>
+  </section>
+
+  <!-- ══ 09 METRICS ══ -->
+  <section>
+    <span class="num">09 — INSTRUMENTATION</span>
+    <h2>Six numbers, and when to pull the plug</h2>
+    <table>
+      <thead><tr><th>Metric</th><th style="width:22%">Target</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Coins placed</td><td>100 in 42 days</td><td>Pace check at day 21: 40+ or pivot to parlours.</td></tr>
+        <tr><td>Female D7 retention</td><td>≥ 35%</td><td>The industry's real north star. Below 20% you have a product problem, not a marketing one — stop all spend.</td></tr>
+        <tr><td>Women who send first message</td><td>≥ 60%</td><td>Proxy for comfort. If they lurk but never speak, safety isn't solved.</td></tr>
+        <tr><td>Time to first match (new woman)</td><td>&lt; 24 h</td><td>Anything slower and she's gone before the habit forms.</td></tr>
+        <tr><td>Retained F:M ratio</td><td>≥ 1:3</td><td>Measure retained, never registered. Registration numbers flatter you because the scarce side churns first.</td></tr>
+        <tr><td>Reports per 100 female sessions</td><td>&lt; 2</td><td>Your early-warning system. This is the number that predicts next month's churn.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="kill" style="margin-top:26px">
+      <h4>Kill switches — write these down before you start</h4>
+      <ul style="margin-bottom:0">
+        <li><b>&lt; 40 coins by day 21</b> → the keeper model failed. Go parlour-only, no second attempt at the same ritual.</li>
+        <li><b>&lt; 60 women at Coin Night</b> → positioning or venue is wrong. Do not open the men's queue on a thin room.</li>
+        <li><b>&lt; 30% of women matched in 7 days after opening</b> → ratio too thin. Freeze new men, widen radius to 40km, fix before spending.</li>
+        <li><b>Female D7 &lt; 20%</b> → stop. Every rupee from here is a rupee into a leaking bucket.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ══ 10 COPY ══ -->
+  <section>
+    <span class="num">10 — COPY BANK</span>
+    <h2>What to actually say</h2>
+    <p class="lede">Marathi first, always. English is the second language of this campaign, not the first. Every line below is short enough for a rickshaw panel and specific enough that a girl in Dhule knows it was written for her.</p>
+
+    <div class="copy">
+      <div class="mr">शंभर नाणी. शंभर मुली. एकही मुलगा नाही.</div>
+      <div class="en">A hundred coins. A hundred girls. Not one boy.</div>
+      <div class="use">Launch line · press · hoarding</div>
+    </div>
+    <div class="copy">
+      <div class="mr">नाणं तुझ्याकडे आहे?</div>
+      <div class="en">Do you have the coin?</div>
+      <div class="use">The question that does all the work</div>
+    </div>
+    <div class="copy">
+      <div class="mr">खानदेशात मुलगी होकार देईल, तरच मुलगा आत येतो.</div>
+      <div class="en">In Khandesh, a man gets in only if a girl says yes.</div>
+      <div class="use">Men's waiting room · rickshaw · the headline</div>
+    </div>
+    <div class="copy">
+      <div class="mr">ह्या दहा नाण्यांवर तुझं नाव आहे. ज्यांना तू खरंच ओळखते, त्यांनाच दे.</div>
+      <div class="en">Your name is on these ten coins. Give them only to women you truly know.</div>
+      <div class="use">The one sentence a keeper says, in person</div>
+    </div>
+    <div class="copy">
+      <div class="mr">ती पहिल्या शंभरातली आहे. तू?</div>
+      <div class="en">She's one of the first hundred. Are you?</div>
+      <div class="use">Coin Night stage line · creator posts</div>
+    </div>
+    <div class="copy">
+      <div class="mr">तुझं नाव, फक्त तुझं. आडनाव नाही.</div>
+      <div class="en">Your name, just yours. No surname.</div>
+      <div class="use">Safety creative — the highest-converting ad copy in this category is safety copy</div>
+    </div>
+  </section>
+
+  <!-- ══ 11 RISKS ══ -->
+  <section>
+    <span class="num">11 — RISKS</span>
+    <h2>What breaks, and the answer</h2>
+    <table>
+      <thead><tr><th style="width:32%">Risk</th><th>Answer</th></tr></thead>
+      <tbody>
+        <tr><td>Male supply too thin → no matches → women leave</td><td>This is the real danger. 300 men against 100 women is 1:3, which is fine — but only if all 300 are active. Cap the queue at 3× the female count and refresh weekly. Never let the ratio drift past 1:5.</td></tr>
+        <tr><td>Coin holders hoard or resell codes</td><td>Codes are bound to her account and revocable. One code, one man, one time. If a code surfaces in a WhatsApp group, revoke it publicly — the enforcement is itself good marketing.</td></tr>
+        <tr><td>A man is vouched for and behaves badly</td><td>Her code is the leash: three reports against a vouched man revokes his seat <i>and</i> costs her a code. Social accountability, not moderation queues. This is how small towns already work — you're just formalising it.</td></tr>
+        <tr><td>Event turns into a "tax on loneliness"</td><td>Real failure mode: women paying ₹12,000 for a dinner with three men they'd never swipe on. Rules — women never pay, the room is women-only, no one is pitched anything, and anyone can leave without explanation.</td></tr>
+        <tr><td>Family finds out and it escalates</td><td>Disguise mode, no surname, no contacts sync, no "friends of friends" graph, and no notification content that reveals intent. DPDPA-compliant data minimisation throughout — no Aadhaar images, ever.</td></tr>
+        <tr><td>The coin becomes a joke / gets counterfeited</td><td>Serial numbers are registered to accounts. A coin that isn't in the registry is worthless. Counterfeits become a story about how real the thing is.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    <div>Connect Me · Khandesh · internal strategy document</div>
+    <div>Sources: Livemint · Financial Express · Tracxn · Vmobify case study · Information Systems Research · The League × YouGov · company disclosures</div>
+  </footer>
+
+</div>
+</body>
+</html>

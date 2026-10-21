@@ -4,14 +4,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { LocationPicker, type LocationValue } from "@/components/LocationPicker";
 import { Photo } from "@/components/media";
 import { api } from "@/lib/client/api";
 import { useToast } from "@/lib/client/hooks";
 import { INTEREST_TAGS } from "@/lib/constants";
-import { KHANDESH_CITIES } from "@/lib/geo";
 import type { Profile } from "@/lib/types";
 
 interface MeResponse {
+  user: { lat: number; lng: number };
   profile: Profile;
 }
 
@@ -38,7 +39,7 @@ export default function EditProfilePage() {
   const [bio, setBio] = useState("");
   const [job, setJob] = useState("");
   const [heightCm, setHeightCm] = useState("");
-  const [cityId, setCityId] = useState("jalgaon");
+  const [location, setLocation] = useState<LocationValue | null>(null);
   const [interests, setInterests] = useState<string[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,7 +53,11 @@ export default function EditProfilePage() {
         setBio(res.profile.bio);
         setJob(res.profile.job ?? "");
         setHeightCm(res.profile.heightCm ? String(res.profile.heightCm) : "");
-        setCityId(res.profile.cityId);
+        setLocation({
+          label: res.profile.cityName,
+          lat: res.user.lat,
+          lng: res.user.lng,
+        });
         setInterests(res.profile.interests);
         setPhotos(res.profile.photos);
       })
@@ -76,6 +81,10 @@ export default function EditProfilePage() {
   };
 
   const save = async () => {
+    if (!location) {
+      showToast("Choose a location first");
+      return;
+    }
     setSaving(true);
     try {
       await api.patch("/api/me", {
@@ -83,7 +92,9 @@ export default function EditProfilePage() {
         bio,
         job,
         heightCm: Number(heightCm) || null,
-        cityId,
+        cityId: location.label,
+        lat: location.lat,
+        lng: location.lng,
         interests,
         photos,
       });
@@ -210,23 +221,8 @@ export default function EditProfilePage() {
             </div>
 
             <div className="field">
-              <span className="label">City</span>
-              <select
-                className="input"
-                value={cityId}
-                onChange={(e) => setCityId(e.target.value)}
-                style={{ appearance: "none" }}
-              >
-                {(["Jalgaon", "Dhule", "Nandurbar"] as const).map((district) => (
-                  <optgroup key={district} label={`${district} district`}>
-                    {KHANDESH_CITIES.filter((city) => city.district === district).map((city) => (
-                      <option key={city.id} value={city.id} style={{ background: "#161618" }}>
-                        {city.name} · {city.local}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+              <span className="label">Location</span>
+              <LocationPicker value={location} onChange={setLocation} />
             </div>
 
             <div className="field">

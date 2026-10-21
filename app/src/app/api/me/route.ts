@@ -1,9 +1,8 @@
 import { getDb } from "@/lib/db";
 import { badRequest, handler, json, readJson, optionalString } from "@/lib/http";
-import { requireUser } from "@/lib/auth";
+import { findUserById, requireUser } from "@/lib/auth";
 import { loadProfile } from "@/lib/profiles";
 import { likesRemaining, likesUsedToday, rebuildQueue } from "@/lib/matching";
-import { CITY_IDS } from "@/lib/geo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +23,8 @@ export const GET = handler(async () => {
       name: user.name,
       phone: user.phone,
       email: user.email,
+      lat: Number(user.lat),
+      lng: Number(user.lng),
       cityId: user.city_id,
       onboardingComplete: Boolean(user.onboarding_complete),
       isPremium: Boolean(user.is_premium),
@@ -81,10 +82,28 @@ export const PATCH = handler(async (req: Request) => {
   }
 
   if (body.cityId !== undefined) {
-    const cityId = String(body.cityId);
-    if (!CITY_IDS.includes(cityId)) throw badRequest("That city isn't in Khandesh");
+    const cityId = String(body.cityId).trim();
+    if (cityId.length < 2 || cityId.length > 120) throw badRequest("Enter a valid location name");
     sets.push("city_id = ?");
     values.push(cityId);
+  }
+
+  if (body.lat !== undefined || body.lng !== undefined) {
+    const lat = typeof body.lat === "number" ? body.lat : Number.NaN;
+    const lng = typeof body.lng === "number" ? body.lng : Number.NaN;
+    if (
+      !Number.isFinite(lat) ||
+      lat < -90 ||
+      lat > 90 ||
+      !Number.isFinite(lng) ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      throw badRequest("Choose a valid location");
+    }
+    if (body.cityId === undefined) throw badRequest("A location name is required");
+    sets.push("lat = ?", "lng = ?");
+    values.push(lat, lng);
   }
 
   if (body.prefAgeMin !== undefined || body.prefAgeMax !== undefined) {
@@ -138,8 +157,13 @@ export const PATCH = handler(async (req: Request) => {
   }
 
   // Preferences changed → the materialised queue is no longer valid.
-  rebuildQueue(user, db);
+  const refreshedUser = findUserById(user.id);
+  if (!refreshedUser) throw new Error("User disappeared while saving preferences");
+  rebuildQueue(refreshedUser, db);
 
-  const profile = loadProfile(user.id, { lat: Number(user.lat), lng: Number(user.lng) });
+  const profile = loadProfile(user.id, {
+    lat: Number(refreshedUser.lat),
+    lng: Number(refreshedUser.lng),
+  });
   return json({ ok: true, profile });
 });

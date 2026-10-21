@@ -46,7 +46,7 @@ export function FilterSheet({ open, onClose, initial, onApply, saving }: FilterS
       open={open}
       onClose={onClose}
       title="Discovery filters"
-      subtitle="Connect Me never shows anyone outside Khandesh."
+      subtitle="Find people near your location, wherever you are."
     >
       <div className="filter-section">
         <div className="filter-head">
@@ -78,7 +78,7 @@ export function FilterSheet({ open, onClose, initial, onApply, saving }: FilterS
         </div>
         <RangeSlider
           min={5}
-          max={120}
+          max={200}
           step={5}
           value={prefs.distance}
           ariaLabel="Maximum distance"
@@ -87,7 +87,7 @@ export function FilterSheet({ open, onClose, initial, onApply, saving }: FilterS
         />
         <div className="filter-scale">
           <span>5 km</span>
-          <span>120 km</span>
+          <span>200 km</span>
         </div>
       </div>
 

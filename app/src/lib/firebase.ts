@@ -19,7 +19,7 @@ export interface FirebaseIdentity {
   phone: string | null;
   /** Verified email — null for phone accounts. */
   email: string | null;
-}
+} 
 
 let cache: { certs: Record<string, string>; expiresAt: number } | null = null;
 

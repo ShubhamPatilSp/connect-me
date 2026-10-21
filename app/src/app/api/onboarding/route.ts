@@ -1,7 +1,6 @@
 import { getDb, now, tx } from "@/lib/db";
 import { badRequest, handler, json, readJson, requireString } from "@/lib/http";
 import { findUserById, requireUser } from "@/lib/auth";
-import { CITY_BY_ID, CITY_IDS, isInKhandesh } from "@/lib/geo";
 import { rebuildQueue } from "@/lib/matching";
 import { ageFromBirthdate, loadProfile } from "@/lib/profiles";
 
@@ -31,8 +30,19 @@ export const POST = handler(async (req: Request) => {
   const seeking = String(body.seeking ?? "");
   if (!SEEKING.includes(seeking as (typeof SEEKING)[number])) throw badRequest("Pick who you'd like to meet");
 
-  const cityId = String(body.cityId ?? "");
-  if (!CITY_IDS.includes(cityId)) throw badRequest("Connect Me is only available inside Khandesh");
+  const cityId = requireString(body, "cityId", { min: 2, max: 120 });
+  const lat = typeof body.lat === "number" ? body.lat : Number.NaN;
+  const lng = typeof body.lng === "number" ? body.lng : Number.NaN;
+  if (
+    !Number.isFinite(lat) ||
+    lat < -90 ||
+    lat > 90 ||
+    !Number.isFinite(lng) ||
+    lng < -180 ||
+    lng > 180
+  ) {
+    throw badRequest("Choose a valid location");
+  }
 
   const intent = body.intent === undefined ? null : String(body.intent);
   if (intent !== null && !INTENTS.includes(intent as (typeof INTENTS)[number])) {
@@ -59,16 +69,6 @@ export const POST = handler(async (req: Request) => {
     .filter((p): p is string => typeof p === "string" && p.length > 0 && p.length <= 900_000)
     .slice(0, 6);
   if (photos.length < 1) throw badRequest("Add at least one photo");
-
-  const city = CITY_BY_ID.get(cityId)!;
-  let lat = Number(body.lat);
-  let lng = Number(body.lng);
-  if (!isInKhandesh(lat, lng)) {
-    // No GPS permission, or the device is outside the region — fall back to the
-    // centroid of the city they selected rather than rejecting the signup.
-    lat = city.lat;
-    lng = city.lng;
-  }
 
   const promptsInput = Array.isArray(body.prompts) ? body.prompts : [];
   const prompts = promptsInput

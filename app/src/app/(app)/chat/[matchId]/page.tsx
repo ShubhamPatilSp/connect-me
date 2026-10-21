@@ -196,7 +196,7 @@ export default function ChatPage() {
               {[
                 `Ask about ${other.interests[0] ?? "their weekend"}`,
                 `You're both in ${other.cityName} — what's the best misal there?`,
-                "What's your ideal Sunday in Khandesh?",
+                "What's your ideal Sunday?",
               ].map((suggestion) => (
                 <button
                   key={suggestion}

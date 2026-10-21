@@ -1,9 +1,8 @@
 /**
- * Authentication: phone OTP + opaque server-side sessions.
+ * Authentication: Firebase identity exchange + opaque server-side sessions.
  *
  * Design notes
- *  - OTPs are never stored in plaintext: HMAC-SHA256(secret, phone|code).
- *  - Verification is constant-time to avoid timing oracles.
+ *  - Firebase verifies phone codes for web and Android clients.
  *  - Sessions are 256-bit random tokens; only their SHA-256 digest is stored,
  *    so a database leak cannot be replayed as a login.
  *  - Cookies are httpOnly + SameSite=Lax, and Secure outside development.
@@ -14,7 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { cookies } from "next/headers";
 
-import { getDb, now, DAY } from "./db";
+import { getDb, now, DAY, tx } from "./db";
 import { cityLabel } from "./geo";
 import { HttpError, tooMany, unauthorized } from "./http";
 import type { SessionUser } from "./types";
@@ -35,7 +34,6 @@ function secret(): string {
     cachedSecret = fromEnv;
     return cachedSecret;
   }
-  // Dev fallback: a persisted random secret keeps sessions valid across restarts.
   const file = path.resolve(process.cwd(), "data/.secret");
   try {
     if (fs.existsSync(file)) {
@@ -87,51 +85,133 @@ export function maskPhone(phone: string | null): string {
 
 export interface OtpRequestResult {
   expiresAt: number;
-  /** Present only outside production so the flow is testable without an SMS gateway. */
   devCode?: string;
 }
 
-export function requestOtp(phone: string, options: { exposeCode?: boolean } = {}): OtpRequestResult {
-  const db = getDb();
-  const t = now();
-  const existing = db
-    .prepare("SELECT sent_at FROM otps WHERE phone = ?")
-    .get(phone) as { sent_at: number } | undefined;
-
-  if (existing && t - Number(existing.sent_at) < OTP_RESEND_COOLDOWN) {
-    const wait = OTP_RESEND_COOLDOWN - (t - Number(existing.sent_at));
-    throw tooMany(`Please wait ${wait}s before requesting another code`);
-  }
-
-  const recent = db
-    .prepare("SELECT COUNT(*) AS n FROM otps WHERE phone = ? AND sent_at > ?")
-    .get(phone, t - 3600) as { n: number };
-  if (Number(recent.n) >= OTP_HOURLY_LIMIT) {
-    throw tooMany("Too many codes requested. Try again in an hour.");
-  }
-
-  const code = String(crypto.randomInt(100000, 999999));
-  const expiresAt = t + OTP_TTL;
-  db.prepare(
-    `INSERT INTO otps (phone, code_hash, expires_at, attempts, sent_at)
-     VALUES (?, ?, ?, 0, ?)
-     ON CONFLICT(phone) DO UPDATE SET
-       code_hash = excluded.code_hash,
-       expires_at = excluded.expires_at,
-       attempts = 0,
-       sent_at = excluded.sent_at`,
-  ).run(phone, hmac(`${phone}|${code}`), expiresAt, t);
-
-  const expose =
-    options.exposeCode ??
-    (process.env.NODE_ENV !== "production" || process.env.CONNEXA_DEV_OTP === "1");
-  return expose ? { expiresAt, devCode: code } : { expiresAt };
+interface SupabaseAuthConfig {
+  url: string;
+  anonKey: string;
 }
 
-export interface VerifyResult {
-  token: string;
-  userId: string;
-  isNewUser: boolean;
+function supabaseAuthConfig(): SupabaseAuthConfig {
+  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new HttpError(
+      503,
+      "phone_auth_not_configured",
+      "Phone verification is not configured. Please try again later.",
+    );
+  }
+  return { url: url.replace(/\/+$/, ""), anonKey };
+}
+
+function reserveOtpRequest(phone: string): { id: number; requestedAt: number } {
+  return tx((db) => {
+    const requestedAt = now();
+    const previous = db
+      .prepare("SELECT requested_at FROM otp_request_log WHERE phone = ? ORDER BY id DESC LIMIT 1")
+      .get(phone) as { requested_at: number } | undefined;
+    if (previous && requestedAt - Number(previous.requested_at) < OTP_RESEND_COOLDOWN) {
+      const wait = OTP_RESEND_COOLDOWN - (requestedAt - Number(previous.requested_at));
+      throw tooMany(`Please wait ${wait}s before requesting another code`);
+    }
+
+    const recent = db
+      .prepare("SELECT COUNT(*) AS n FROM otp_request_log WHERE phone = ? AND requested_at > ?")
+      .get(phone, requestedAt - 3600) as { n: number };
+    if (Number(recent.n) >= OTP_HOURLY_LIMIT) {
+      throw tooMany("Too many codes requested. Try again in an hour.");
+    }
+
+    const result = db
+      .prepare("INSERT INTO otp_request_log (phone, requested_at) VALUES (?, ?)")
+      .run(phone, requestedAt);
+    db.prepare("DELETE FROM otp_request_log WHERE phone = ? AND requested_at < ?")
+      .run(phone, requestedAt - DAY);
+    return { id: Number(result.lastInsertRowid), requestedAt };
+  });
+}
+
+async function callSupabaseAuth(
+  endpoint: "otp" | "verify",
+  payload: Record<string, string | boolean>,
+): Promise<Response> {
+  const { url, anonKey } = supabaseAuthConfig();
+  try {
+    return await fetch(`${url}/auth/v1/${endpoint}`, {
+      method: "POST",
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15_000),
+      cache: "no-store",
+    });
+  } catch (err) {
+    console.error(`[auth] Supabase ${endpoint} request failed`, err);
+    throw new HttpError(
+      502,
+      "phone_auth_unavailable",
+      "Phone verification is temporarily unavailable.",
+    );
+  }
+}
+
+export async function requestOtp(
+  phone: string,
+  options: { exposeCode?: boolean } = {},
+): Promise<OtpRequestResult> {
+  const reservation = reserveOtpRequest(phone);
+  const db = getDb();
+
+  try {
+    if (options.exposeCode) {
+      const code = String(crypto.randomInt(100000, 1_000_000));
+      const expiresAt = reservation.requestedAt + OTP_TTL;
+      db.prepare(
+        `INSERT INTO otps (phone, code_hash, expires_at, attempts, sent_at)
+         VALUES (?, ?, ?, 0, ?)
+         ON CONFLICT(phone) DO UPDATE SET
+           code_hash = excluded.code_hash,
+           expires_at = excluded.expires_at,
+           attempts = 0,
+           sent_at = excluded.sent_at`,
+      ).run(phone, hmac(`${phone}|${code}`), expiresAt, reservation.requestedAt);
+      return { expiresAt, devCode: code };
+    }
+
+    const response = await callSupabaseAuth("otp", { phone, create_user: true });
+    if (!response.ok) {
+      console.error(`[auth] Supabase OTP request rejected (${response.status})`);
+      if (response.status === 429) {
+        throw tooMany("Too many verification requests. Try again later.");
+      }
+      throw new HttpError(
+        502,
+        "sms_delivery_failed",
+        "Could not send a verification code. Please try again.",
+      );
+    }
+
+    const sentAt = reservation.requestedAt;
+    db.prepare(
+      `INSERT INTO otps (phone, code_hash, expires_at, attempts, sent_at)
+       VALUES (?, ?, ?, 0, ?)
+       ON CONFLICT(phone) DO UPDATE SET
+         code_hash = excluded.code_hash,
+         expires_at = excluded.expires_at,
+         attempts = 0,
+         sent_at = excluded.sent_at`,
+    ).run(phone, hmac(`${phone}|supabase|${sentAt}`), sentAt + OTP_TTL, sentAt);
+
+    return { expiresAt: sentAt + OTP_TTL };
+  } catch (err) {
+    db.prepare("DELETE FROM otp_request_log WHERE id = ?").run(reservation.id);
+    throw err;
+  }
 }
 
 /**
@@ -183,12 +263,24 @@ export function findOrCreateUserByEmail(email: string): { userId: string; isNewU
   return { userId, isNewUser: true };
 }
 
-export function verifyOtp(phone: string, code: string): VerifyResult {
+export interface VerifyResult {
+  token: string;
+  userId: string;
+  isNewUser: boolean;
+}
+
+export async function verifyOtp(
+  phone: string,
+  code: string,
+  options: { allowDevCode?: boolean } = {},
+): Promise<VerifyResult> {
   const db = getDb();
   const t = now();
   const row = db
-    .prepare("SELECT code_hash, expires_at, attempts FROM otps WHERE phone = ?")
-    .get(phone) as { code_hash: string; expires_at: number; attempts: number } | undefined;
+    .prepare("SELECT code_hash, expires_at, attempts, sent_at FROM otps WHERE phone = ?")
+    .get(phone) as
+    | { code_hash: string; expires_at: number; attempts: number; sent_at: number }
+    | undefined;
 
   if (!row) throw new HttpError(400, "otp_missing", "Request a code first");
   if (Number(row.expires_at) < t) {
@@ -199,9 +291,49 @@ export function verifyOtp(phone: string, code: string): VerifyResult {
     db.prepare("DELETE FROM otps WHERE phone = ?").run(phone);
     throw new HttpError(429, "otp_locked", "Too many attempts. Request a new code.");
   }
-  if (!safeEqual(row.code_hash, hmac(`${phone}|${code}`))) {
+
+  const localCodeMatches = safeEqual(row.code_hash, hmac(`${phone}|${code}`));
+  if (options.allowDevCode && localCodeMatches) {
+    db.prepare("DELETE FROM otps WHERE phone = ?").run(phone);
+    const { userId, isNewUser } = findOrCreateUserByPhone(phone);
+    return { token: createSession(userId), userId, isNewUser };
+  }
+  if (options.allowDevCode) {
     db.prepare("UPDATE otps SET attempts = attempts + 1 WHERE phone = ?").run(phone);
-    throw new HttpError(400, "otp_invalid", "That code doesn't match. Try again.");
+    throw new HttpError(400, "otp_invalid", "That code is invalid or expired. Try again.");
+  }
+  if (!safeEqual(row.code_hash, hmac(`${phone}|supabase|${row.sent_at}`))) {
+    throw new HttpError(400, "otp_invalid", "That code is invalid or expired. Try again.");
+  }
+
+  const response = await callSupabaseAuth("verify", { type: "sms", phone, token: code });
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw tooMany("Too many attempts. Request a new code later.");
+    }
+    if (response.status === 400 || response.status === 422) {
+      db.prepare("UPDATE otps SET attempts = attempts + 1 WHERE phone = ?").run(phone);
+      throw new HttpError(400, "otp_invalid", "That code is invalid or expired. Try again.");
+    }
+    console.error(`[auth] Supabase OTP verification failed (${response.status})`);
+    throw new HttpError(
+      502,
+      "phone_auth_unavailable",
+      "Phone verification is temporarily unavailable.",
+    );
+  }
+
+  const verification = (await response.json()) as {
+    phone?: string;
+    user?: { phone?: string };
+  };
+  const verifiedPhone = verification.user?.phone ?? verification.phone;
+  if (!verifiedPhone || normalizePhone(verifiedPhone) !== phone) {
+    throw new HttpError(
+      502,
+      "phone_auth_invalid_response",
+      "Phone verification could not be confirmed.",
+    );
   }
 
   db.prepare("DELETE FROM otps WHERE phone = ?").run(phone);

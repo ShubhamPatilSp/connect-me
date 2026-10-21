@@ -234,6 +234,31 @@ function candidateRows(viewer: UserRow, db: Database, limit = 3000): CandidateRo
   const seekingClause =
     "(u.seeking = 'everyone' OR (u.seeking = 'women' AND ? = 'woman') OR (u.seeking = 'men' AND ? = 'man'))";
   const verifiedClause = viewer.pref_verified_only ? "u.photo_verified = 1" : "1 = 1";
+  const distance = viewer.pref_distance_km ?? 100;
+  const lat = Number(viewer.lat);
+  const lng = Number(viewer.lng);
+  const latDelta = distance / 110.574;
+  const minLat = Math.max(-90, lat - latDelta);
+  const maxLat = Math.min(90, lat + latDelta);
+  let geoClause = "u.lat BETWEEN ? AND ?";
+  const geoParams: number[] = [minLat, maxLat];
+
+  if (Math.abs(lat) + latDelta < 90) {
+    const maxAbsLat = Math.max(Math.abs(minLat), Math.abs(maxLat));
+    const lngDelta = distance / (111.32 * Math.cos((maxAbsLat * Math.PI) / 180));
+    if (lngDelta < 180) {
+      if (lng - lngDelta < -180) {
+        geoClause += " AND (u.lng >= ? OR u.lng <= ?)";
+        geoParams.push(lng - lngDelta + 360, lng + lngDelta);
+      } else if (lng + lngDelta > 180) {
+        geoClause += " AND (u.lng >= ? OR u.lng <= ?)";
+        geoParams.push(lng - lngDelta, lng + lngDelta - 360);
+      } else {
+        geoClause += " AND u.lng BETWEEN ? AND ?";
+        geoParams.push(lng - lngDelta, lng + lngDelta);
+      }
+    }
+  }
 
   const sql = `
     SELECT u.id, u.birthdate, u.gender, u.seeking, u.city_id, u.lat, u.lng,
@@ -249,6 +274,7 @@ function candidateRows(viewer: UserRow, db: Database, limit = 3000): CandidateRo
        AND ${genderClause}
        AND ${seekingClause}
        AND ${verifiedClause}
+       AND ${geoClause}
        AND NOT EXISTS (SELECT 1 FROM swipes s WHERE s.swiper_id = ? AND s.target_id = u.id)
        AND NOT EXISTS (
              SELECT 1 FROM blocks b
@@ -260,7 +286,16 @@ function candidateRows(viewer: UserRow, db: Database, limit = 3000): CandidateRo
 
   return db
     .prepare(sql)
-    .all(viewer.id, viewer.gender, viewer.gender, viewer.id, viewer.id, viewer.id, limit) as CandidateRow[];
+    .all(
+      viewer.id,
+      viewer.gender,
+      viewer.gender,
+      ...geoParams,
+      viewer.id,
+      viewer.id,
+      viewer.id,
+      limit,
+    ) as CandidateRow[];
 }
 
 /** Materialise a ranked candidate queue for one viewer. Returns rows written. */

@@ -1,12 +1,4 @@
-/**
- * Khandesh region registry.
- *
- * Connect Me is intentionally scoped to the Khandesh region of Maharashtra
- * (Jalgaon, Dhule and Nandurbar districts). Every profile, every discovery
- * query and every distance calculation is bounded by this registry — a user
- * physically outside Khandesh cannot complete onboarding, and discovery never
- * surfaces anyone outside it.
- */
+/** Legacy city coordinates used for built-in demo profiles. */
 
 export type District = "Jalgaon" | "Dhule" | "Nandurbar";
 
@@ -64,25 +56,6 @@ export const CITY_BY_ID: ReadonlyMap<string, KhandeshCity> = new Map(
 
 export const CITY_IDS: readonly string[] = KHANDESH_CITIES.map((c) => c.id);
 
-/** The geographic envelope of Khandesh, used to reject out-of-region signups. */
-export const KHANDESH_BOUNDS = {
-  minLat: 20.10,
-  maxLat: 22.10,
-  minLng: 73.40,
-  maxLng: 76.35,
-} as const;
-
-export function isInKhandesh(lat: number, lng: number): boolean {
-  return (
-    Number.isFinite(lat) &&
-    Number.isFinite(lng) &&
-    lat >= KHANDESH_BOUNDS.minLat &&
-    lat <= KHANDESH_BOUNDS.maxLat &&
-    lng >= KHANDESH_BOUNDS.minLng &&
-    lng <= KHANDESH_BOUNDS.maxLng
-  );
-}
-
 const EARTH_RADIUS_KM = 6371.0088;
 
 /** Great-circle distance in kilometres (haversine). */
@@ -101,24 +74,7 @@ export function distanceKm(
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-/**
- * Snap arbitrary coordinates to the nearest Khandesh city.
- * Used during onboarding so a user's city label always matches their location.
- */
-export function nearestCity(lat: number, lng: number): KhandeshCity {
-  let best = KHANDESH_CITIES[0];
-  let bestD = Number.POSITIVE_INFINITY;
-  for (const city of KHANDESH_CITIES) {
-    const d = distanceKm(lat, lng, city.lat, city.lng);
-    if (d < bestD) {
-      bestD = d;
-      best = city;
-    }
-  }
-  return best;
-}
-
 export function cityLabel(id: string | null | undefined): string {
-  if (!id) return "Khandesh";
-  return CITY_BY_ID.get(id)?.name ?? "Khandesh";
+  if (!id) return "Location not set";
+  return CITY_BY_ID.get(id)?.name ?? id;
 }

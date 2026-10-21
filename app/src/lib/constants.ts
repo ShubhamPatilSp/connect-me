@@ -38,12 +38,12 @@ export const INTENTS = [
 ] as const;
 
 export const PROMPT_QUESTIONS = [
-  "A perfect Khandesh weekend for me is…",
+  "A perfect weekend for me is…",
   "The way to my heart is…",
   "My most controversial food opinion…",
   "You should message me if…",
   "My love language is…",
-  "The best thing about growing up here…",
+  "The best thing about where I grew up…",
 ] as const;
 
 export const GENDERS = [
@@ -69,6 +69,6 @@ export const REPORT_REASONS = [
 
 export const BRAND = {
   name: "Connect Me",
-  tagline: "Khandesh only. Real people, close by.",
-  region: "Khandesh",
+  tagline: "Meet real people, close by.",
+  region: "Worldwide",
 } as const;

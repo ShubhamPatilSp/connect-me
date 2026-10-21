@@ -61,7 +61,7 @@ export default function MePage() {
           </div>
           <div className="profile-sub" style={{ justifyContent: "center" }}>
             <Icon name="pin" size={11} />
-            {profile ? `${profile.cityName}, Khandesh` : ""}
+            {profile ? profile.cityName : ""}
           </div>
         </div>
         <Link href="/me/edit" className="icon-btn" aria-label="Edit profile">

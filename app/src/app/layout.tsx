@@ -3,9 +3,9 @@ import "./globals.css";
 import "./ui.css";
 
 export const metadata: Metadata = {
-  title: "Connect Me — Khandesh only",
+  title: "Connect Me — Meet people nearby",
   description:
-    "Connect Me is a dating app built for Khandesh. Real people from Jalgaon, Dhule and Nandurbar — close enough to actually meet.",
+    "Connect Me helps you meet real people nearby, wherever you are.",
   applicationName: "Connect Me",
   formatDetection: { telephone: false },
 };

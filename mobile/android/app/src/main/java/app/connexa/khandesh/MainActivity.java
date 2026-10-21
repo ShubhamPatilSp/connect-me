@@ -1,10 +1,12 @@
 package app.connexa.khandesh;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,6 +15,7 @@ import android.view.ViewGroup;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
+import android.webkit.GeolocationPermissions;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -58,6 +61,7 @@ public class MainActivity extends Activity {
     private static final String KEY_SERVER = "server_url";
     private static final int REQ_FILE = 1001;
     private static final int REQ_GOOGLE = 1002;
+    private static final int REQ_LOCATION = 1003;
 
     /** Web OAuth client for this Firebase project (public identifier, not a secret). */
     private static final String WEB_CLIENT_ID =
@@ -72,6 +76,8 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> pendingFiles;
     private String verificationId;
     private GoogleSignInClient googleClient;
+    private GeolocationPermissions.Callback geolocationCallback;
+    private String geolocationOrigin;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -86,6 +92,7 @@ public class MainActivity extends Activity {
 
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
+        settings.setGeolocationEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
@@ -126,6 +133,39 @@ public class MainActivity extends Activity {
         });
 
         web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public void onGeolocationPermissionsShowPrompt(
+                    String origin, GeolocationPermissions.Callback callback) {
+                Uri current = Uri.parse(web.getUrl() == null ? "" : web.getUrl());
+                String currentOrigin = current.getScheme() + "://" + current.getAuthority();
+                if (!origin.equals(currentOrigin)) {
+                    callback.invoke(origin, false, false);
+                    return;
+                }
+
+                boolean granted =
+                        checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                                == PackageManager.PERMISSION_GRANTED
+                        || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                                == PackageManager.PERMISSION_GRANTED;
+                if (granted) {
+                    callback.invoke(origin, true, false);
+                    return;
+                }
+
+                if (geolocationCallback != null) {
+                    geolocationCallback.invoke(geolocationOrigin, false, false);
+                }
+                geolocationCallback = callback;
+                geolocationOrigin = origin;
+                requestPermissions(
+                        new String[] {
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        },
+                        REQ_LOCATION);
+            }
+
             @Override
             public boolean onShowFileChooser(WebView view,
                                              ValueCallback<Uri[]> callback,
@@ -339,6 +379,24 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public void onRequestPermissionsResult(
+            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != REQ_LOCATION || geolocationCallback == null) return;
+
+        boolean granted = false;
+        for (int result : grantResults) {
+            if (result == PackageManager.PERMISSION_GRANTED) {
+                granted = true;
+                break;
+            }
+        }
+        geolocationCallback.invoke(geolocationOrigin, granted, false);
+        geolocationCallback = null;
+        geolocationOrigin = null;
+    }
+
+    @Override
     public void onBackPressed() {
         if (web != null && web.canGoBack()) {
             web.goBack();
@@ -361,6 +419,11 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (geolocationCallback != null) {
+            geolocationCallback.invoke(geolocationOrigin, false, false);
+            geolocationCallback = null;
+            geolocationOrigin = null;
+        }
         if (web != null) {
             web.removeJavascriptInterface("AndroidBridge");
             web.destroy();

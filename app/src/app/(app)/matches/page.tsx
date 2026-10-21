@@ -51,7 +51,7 @@ export default function MatchesPage() {
             <Icon name="heart" size={11} />
             {matches.length === 0
               ? "No matches yet"
-              : `${matches.length} ${matches.length === 1 ? "match" : "matches"} in Khandesh`}
+              : `${matches.length} ${matches.length === 1 ? "match" : "matches"}`}
           </div>
         </div>
         <Link href="/discover" className="icon-btn" aria-label="Discover">

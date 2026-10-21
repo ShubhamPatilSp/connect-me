@@ -47,7 +47,7 @@ export default function DiscoverPage() {
   const [prefs, setPrefs] = useState<FilterPrefs>({
     ageMin: 21,
     ageMax: 40,
-    distance: 60,
+    distance: 100,
     verifiedOnly: false,
   });
 
@@ -144,7 +144,7 @@ export default function DiscoverPage() {
 
   const firstName = me?.user.name?.split(" ")[0] ?? "there";
   const myPhoto = me?.profile.photos[0] ?? null;
-  const cityName = me?.profile.cityName ?? "Khandesh";
+  const cityName = me?.profile.cityName ?? "Nearby";
 
   return (
     <>
@@ -156,7 +156,7 @@ export default function DiscoverPage() {
           <div className="greeting">Hello {firstName}!</div>
           <div className="greeting-sub">
             <Icon name="pin" size={11} />
-            {cityName}, Khandesh
+            {cityName}
           </div>
         </div>
         <button className="icon-btn" onClick={() => setFiltersOpen(true)} aria-label="Filters">
@@ -175,8 +175,7 @@ export default function DiscoverPage() {
           </div>
           <h2 className="h2">You&apos;ve seen everyone nearby</h2>
           <p className="muted" style={{ maxWidth: 280, fontSize: 14 }}>
-            Khandesh is small — new people join every day. Widen your distance or check back
-            tomorrow.
+            New people join every day. Widen your distance or check back tomorrow.
           </p>
           <button
             className="btn btn-ghost btn-sm"

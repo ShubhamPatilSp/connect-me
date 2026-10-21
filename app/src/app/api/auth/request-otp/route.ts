@@ -11,9 +11,7 @@ export const POST = handler(async (req: Request) => {
   const phone = normalizePhone(raw);
   if (!phone) throw badRequest("Enter a valid 10-digit Indian mobile number", "invalid_phone");
 
-  // `devCode` is only surfaced when demo features are enabled (localhost /
-  // development). In production it goes out over the SMS provider instead.
-  const result = requestOtp(phone, { exposeCode: demoFeaturesEnabled(req) });
+  const result = await requestOtp(phone, { exposeCode: demoFeaturesEnabled(req) });
 
   return json({
     ok: true,

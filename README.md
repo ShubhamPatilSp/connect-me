@@ -1,8 +1,8 @@
-# Connect Me — a dating app for Khandesh
+# Connect Me — meet people nearby, worldwide
 
-A working, production-shaped dating app scoped to the Khandesh region of Maharashtra
-(Jalgaon, Dhule, Nandurbar). Dark, gradient-led interface modelled on the reference
-design: full-bleed swipe cards, match percentage, floating action bar, four-tab shell.
+A working, production-shaped dating app with global location-based discovery. Dark,
+gradient-led interface modelled on the reference design: full-bleed swipe cards, match
+percentage, floating action bar, four-tab shell.
 
 Not a mockup — every screen talks to a real database, real auth, real matching, and
 real-time chat.
@@ -26,13 +26,11 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-First request creates and seeds the database: 36 Khandesh profiles, a demo account,
-six inbound likes, three live conversations.
+In development, the first request seeds sample profiles. Production does not seed
+sample users unless `CONNEXA_AUTOSEED=1` is explicitly set.
 
 **Two ways in:**
 
-- **Explore the demo account** — one click on the landing page. Signs you in as Rohan,
-  a 27-year-old in Jalgaon, with matches and unread messages already waiting.
 - **Sign up properly** — enter any valid Indian mobile number. The 6-digit OTP is shown
   on screen because no SMS gateway is wired up; everything after that is real.
 
@@ -123,19 +121,19 @@ reserved for candidates outside the top slice (epsilon-greedy) so the deck does 
 collapse into a filter bubble. Each card explains itself — "3 shared interests",
 "2 km away", "Same intentions" — because a score nobody can read is a score nobody trusts.
 
-## Khandesh-only, enforced in four places
+## Global locations and discovery
 
-1. `lib/geo.ts` is the single source of truth: 28 towns across three districts with
-   coordinates, Marathi names, and district mapping.
-2. Onboarding rejects any city outside the registry and snaps GPS to the nearest town.
-3. Every discovery query is bounded by the viewer's radius inside that registry.
-4. Region cannot be changed to anywhere else — the picker only offers Khandesh towns.
+- Onboarding and profile settings support GPS, worldwide city search, and manual
+  latitude/longitude entry.
+- New accounts start with a 100 km discovery radius. The radius can be changed in
+  Settings and discovery only returns profiles inside the saved radius.
+- Phone verification uses Firebase Phone Auth and remains India-only.
 
 ## API
 
 | Route | Purpose |
 |---|---|
-| `POST /api/auth/request-otp` · `verify` · `logout` · `demo` | Session lifecycle |
+| `POST /api/auth/request-otp` · `verify` · `logout` | Session lifecycle |
 | `GET/PATCH /api/me` | Profile, stats, preferences, photos, interests |
 | `POST /api/onboarding` | Complete signup, rebuild queue |
 | `GET /api/deck` | Ranked cards with score + reasons |
@@ -152,25 +150,25 @@ collapse into a filter bubble. Each card explains itself — "3 shared interests
 
 ```bash
 npm start                       # in one terminal
-node scripts/smoke.mjs          # in another — 21 assertions across the critical path
+npm run smoke                   # in another — public entry and auth-boundary checks
 ```
 
-The smoke test covers auth, deck integrity, scoring bounds, match creation, duplicate
-swipe rejection, messaging, paywall gating, unmatch, and unauthenticated access.
+The smoke test confirms the landing page is available, demo login is removed, and
+profile, discovery, and matches APIs reject unauthenticated requests.
 
-## Deliberate demo affordances
+## Development-only affordances
 
-Two things are switched on only for localhost / `NODE_ENV=development` and must not ship:
+This is switched on only for localhost / `NODE_ENV=development` and must not ship:
 
-- `POST /api/auth/demo` — one-tap session for the seeded account.
 - `POST /api/premium` — flips the subscription flag so the paywall is testable.
 
-Both check `demoFeaturesEnabled()` in `lib/env.ts`, which returns false on a public host
-unless `CONNEXA_DEMO_LOGIN=1` is explicitly set. Real entitlements belong in an App
-Store / Play receipt webhook.
+It checks `demoFeaturesEnabled()` in `lib/env.ts`, which returns false on a public host
+unless `CONNEXA_DEMO_LOGIN=1` is explicitly set. Real entitlements belong in an App Store /
+Play receipt webhook.
 
-The OTP is also surfaced in the response for the same reason — replace `requestOtp` with
-an SMS provider call and the field disappears.
+Production phone OTP delivery and verification use Supabase Auth. Set `SUPABASE_URL` and
+`SUPABASE_ANON_KEY` in the app environment and configure an SMS provider in Supabase Auth.
+Local development uses an on-screen test code.
 
 ## Known limits (and where they break)
 
