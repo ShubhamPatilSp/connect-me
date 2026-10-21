@@ -2,7 +2,7 @@ import { getDb, now, tx } from "@/lib/db";
 import { badRequest, handler, json, readJson, requireString } from "@/lib/http";
 import { findUserById, requireUser } from "@/lib/auth";
 import { rebuildQueue } from "@/lib/matching";
-import { ageFromBirthdate, loadProfile } from "@/lib/profiles";
+import { loadProfile } from "@/lib/profiles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,12 +17,29 @@ export const POST = handler(async (req: Request) => {
 
   const name = requireString(body, "name", { min: 2, max: 40 });
   const birthdate = requireString(body, "birthdate", { min: 10, max: 10 });
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthdate) || Number.isNaN(Date.parse(birthdate))) {
+  const birthdateValue = new Date(`${birthdate}T00:00:00.000Z`);
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(birthdate) ||
+    Number.isNaN(birthdateValue.getTime()) ||
+    birthdateValue.toISOString().slice(0, 10) !== birthdate
+  ) {
     throw badRequest("Enter your date of birth as YYYY-MM-DD");
   }
-  const age = ageFromBirthdate(birthdate);
-  if (age < 18) throw badRequest("Connect Me is 18+. You must be at least 18 to join.");
-  if (age > 90) throw badRequest("Please check your date of birth");
+  const today = new Date();
+  const latestAdultBirthdate = new Date(
+    Date.UTC(today.getUTCFullYear() - 18, today.getUTCMonth(), today.getUTCDate()),
+  )
+    .toISOString()
+    .slice(0, 10);
+  const earliestAllowedBirthdate = new Date(
+    Date.UTC(today.getUTCFullYear() - 91, today.getUTCMonth(), today.getUTCDate()),
+  )
+    .toISOString()
+    .slice(0, 10);
+  if (birthdate > latestAdultBirthdate) {
+    throw badRequest("Connect Me is 18+. You must be at least 18 to join.");
+  }
+  if (birthdate < earliestAllowedBirthdate) throw badRequest("Please check your date of birth");
 
   const gender = String(body.gender ?? "");
   if (!GENDERS.includes(gender as (typeof GENDERS)[number])) throw badRequest("Pick who you are");

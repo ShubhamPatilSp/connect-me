@@ -42,6 +42,14 @@ async function fileToDataUrl(file: File): Promise<string> {
   return canvas.toDataURL("image/jpeg", 0.82);
 }
 
+function isValidAdultBirthdate(birthdate: string, latestEligibleBirthdate: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthdate) || birthdate > latestEligibleBirthdate) {
+    return false;
+  }
+  const date = new Date(`${birthdate}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === birthdate;
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -53,9 +61,11 @@ export default function OnboardingPage() {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [devCode, setDevCode] = useState<string | null>(null);
+  const [demoModeEnabled, setDemoModeEnabled] = useState(false);
 
   const [authMode, setAuthMode] = useState<"email" | "phone">("email");
   const [emailMode, setEmailMode] = useState<"signup" | "signin">("signup");
+  const [emailDemoPin, setEmailDemoPin] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -79,8 +89,11 @@ export default function OnboardingPage() {
 
   const maxBirthdate = useMemo(() => {
     const d = new Date();
-    d.setFullYear(d.getFullYear() - 18);
-    return d.toISOString().slice(0, 10);
+    return new Date(
+      Date.UTC(d.getUTCFullYear() - 18, d.getUTCMonth(), d.getUTCDate()),
+    )
+      .toISOString()
+      .slice(0, 10);
   }, []);
 
   // Inside the Android shell, phone auth runs natively: Firebase verifies the
@@ -88,12 +101,20 @@ export default function OnboardingPage() {
   // fall back to the server-side OTP flow.
   const nativeAuth = useRef(false);
   const [nativeReady, setNativeReady] = useState(false);
+  const [nativeDebug, setNativeDebug] = useState(false);
 
   useEffect(() => {
-    const bridge = (window as unknown as { AndroidBridge?: { hasNativeAuth?: () => boolean } })
-      .AndroidBridge;
+    const bridge = (
+      window as unknown as {
+        AndroidBridge?: {
+          hasNativeAuth?: () => boolean;
+          isDebugBuild?: () => boolean;
+        };
+      }
+    ).AndroidBridge;
     nativeAuth.current = Boolean(bridge?.hasNativeAuth?.());
     setNativeReady(nativeAuth.current);
+    setNativeDebug(Boolean(bridge?.isDebugBuild?.()));
     if (!nativeAuth.current) return;
 
     const win = window as unknown as { ConnexaNative?: Record<string, unknown> };
@@ -132,6 +153,13 @@ export default function OnboardingPage() {
       delete win.ConnexaNative;
     };
   }, [router]);
+
+  useEffect(() => {
+    void api
+      .get<{ enabled: boolean }>("/api/auth/demo-mode")
+      .then((result) => setDemoModeEnabled(result.enabled))
+      .catch(() => setDemoModeEnabled(false));
+  }, []);
 
   // Signal "there is more below" instead of a hard cut at the fold.
   useEffect(() => {
@@ -190,12 +218,12 @@ export default function OnboardingPage() {
     setStep((s) => Math.max(0, s - 1));
   };
 
-  const sendCode = useCallback(async () => {
+  const sendCode = useCallback(async (forEmailDemoPin = emailDemoPin) => {
     setError(null);
     setDevCode(null);
     setCode("");
 
-    if (nativeAuth.current) {
+    if (nativeAuth.current && !(nativeDebug && demoModeEnabled) && !forEmailDemoPin) {
       setBusy(true);
       try {
         (window as unknown as { AndroidBridge: { startPhoneAuth: (p: string) => void } })
@@ -209,9 +237,9 @@ export default function OnboardingPage() {
 
     setBusy(true);
     try {
-      const result = await api.post<{ devCode: string | null }>("/api/auth/request-otp", {
-        phone,
-      });
+      const result = forEmailDemoPin
+        ? await api.post<{ devCode: string | null }>("/api/auth/request-email-pin", { email })
+        : await api.post<{ devCode: string | null }>("/api/auth/request-otp", { phone });
       setDevCode(result.devCode);
       setStep(1);
     } catch (err) {
@@ -219,10 +247,10 @@ export default function OnboardingPage() {
     } finally {
       setBusy(false);
     }
-  }, [phone]);
+  }, [phone, email, emailDemoPin, nativeDebug, demoModeEnabled]);
 
   const verifyCode = useCallback(async () => {
-    if (nativeAuth.current) {
+    if (nativeAuth.current && !(nativeDebug && demoModeEnabled) && !emailDemoPin) {
       setError(null);
       setBusy(true);
       try {
@@ -238,10 +266,12 @@ export default function OnboardingPage() {
     setBusy(true);
     setError(null);
     try {
-      const res = await api.post<{ onboardingComplete: boolean }>("/api/auth/verify", {
-        phone,
-        code,
-      });
+      const res = emailDemoPin
+        ? await api.post<{ onboardingComplete: boolean }>("/api/auth/verify-email-pin", {
+            email,
+            code,
+          })
+        : await api.post<{ onboardingComplete: boolean }>("/api/auth/verify", { phone, code });
       if (res.onboardingComplete) {
         router.push("/discover");
         router.refresh();
@@ -253,7 +283,7 @@ export default function OnboardingPage() {
     } finally {
       setBusy(false);
     }
-  }, [phone, code, router]);
+  }, [phone, email, code, emailDemoPin, nativeDebug, demoModeEnabled, router]);
 
   const submit = useCallback(async () => {
     if (!location) {
@@ -320,7 +350,7 @@ export default function OnboardingPage() {
       case 1:
         return code.length === 6;
       case 2:
-        return name.trim().length >= 2 && birthdate.length === 10;
+        return name.trim().length >= 2 && isValidAdultBirthdate(birthdate, maxBirthdate);
       case 3:
         return location !== null;
       case 4:
@@ -433,6 +463,7 @@ export default function OnboardingPage() {
                 data-active={authMode === "email"}
                 onClick={() => {
                   setAuthMode("email");
+                  setEmailDemoPin(false);
                   setError(null);
                 }}
               >
@@ -443,6 +474,7 @@ export default function OnboardingPage() {
                 data-active={authMode === "phone"}
                 onClick={() => {
                   setAuthMode("phone");
+                  setEmailDemoPin(false);
                   setError(null);
                 }}
               >
@@ -498,6 +530,25 @@ export default function OnboardingPage() {
                     ? "Already have an account? Sign in"
                     : "New here? Create an account"}
                 </button>
+                {demoModeEnabled && (
+                  <button
+                    className="dim"
+                    style={{
+                      background: "none",
+                      padding: 0,
+                      textAlign: "left",
+                      fontSize: 13,
+                      textDecoration: "underline",
+                    }}
+                    disabled={busy}
+                    onClick={() => {
+                      setEmailDemoPin(true);
+                      void sendCode(true);
+                    }}
+                  >
+                    Use a development PIN instead
+                  </button>
+                )}
               </div>
             ) : (
               <div className={styles.phoneWrap}>
@@ -520,7 +571,9 @@ export default function OnboardingPage() {
           <div className="rise">
             <p className={styles.kicker}>Verify</p>
             <h1 className={styles.title}>Enter the code</h1>
-            <p className={styles.lead}>Sent to +91 {phone}. It expires in 5 minutes.</p>
+            <p className={styles.lead}>
+              {emailDemoPin ? `For ${email}.` : `Sent to +91 ${phone}.`} It expires in 5 minutes.
+            </p>
 
             <input
               className={styles.otpInput}

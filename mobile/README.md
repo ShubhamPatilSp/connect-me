@@ -54,6 +54,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 On first launch the app asks for the server address. Start the backend on your
 computer (`cd app && npm start`) and enter the machine's LAN address, e.g.
 `http://192.168.1.42:3000`. The phone must be on the same Wi-Fi.
+When the server enables demo features, the debug APK uses the server-issued test PIN
+for phone sign-in, matching the web development flow. Email sign-in also offers a
+development PIN. Release APKs keep native Firebase phone verification.
 
 To bake the address in and skip the setup screen, set `KEY_SERVER` in
 `MainActivity` before the `prefs()` read, or ship a variant with a fixed

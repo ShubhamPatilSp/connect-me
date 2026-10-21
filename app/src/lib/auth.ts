@@ -214,6 +214,59 @@ export async function requestOtp(
   }
 }
 
+export async function requestEmailDemoOtp(email: string): Promise<OtpRequestResult> {
+  const identifier = `email:${email.trim().toLowerCase()}`;
+  const reservation = reserveOtpRequest(identifier);
+  const code = String(crypto.randomInt(100000, 1_000_000));
+  const expiresAt = reservation.requestedAt + OTP_TTL;
+
+  try {
+    getDb()
+      .prepare(
+        `INSERT INTO otps (phone, code_hash, expires_at, attempts, sent_at)
+         VALUES (?, ?, ?, 0, ?)
+         ON CONFLICT(phone) DO UPDATE SET
+           code_hash = excluded.code_hash,
+           expires_at = excluded.expires_at,
+           attempts = 0,
+           sent_at = excluded.sent_at`,
+      )
+      .run(identifier, hmac(`${identifier}|${code}`), expiresAt, reservation.requestedAt);
+    return { expiresAt, devCode: code };
+  } catch (err) {
+    getDb().prepare("DELETE FROM otp_request_log WHERE id = ?").run(reservation.id);
+    throw err;
+  }
+}
+
+export async function verifyEmailDemoOtp(email: string, code: string): Promise<VerifyResult> {
+  const identifier = `email:${email.trim().toLowerCase()}`;
+  const db = getDb();
+  const row = db
+    .prepare("SELECT code_hash, expires_at, attempts FROM otps WHERE phone = ?")
+    .get(identifier) as
+    | { code_hash: string; expires_at: number; attempts: number }
+    | undefined;
+
+  if (!row) throw new HttpError(400, "otp_missing", "Request a code first");
+  if (Number(row.expires_at) < now()) {
+    db.prepare("DELETE FROM otps WHERE phone = ?").run(identifier);
+    throw new HttpError(400, "otp_expired", "That code expired. Request a new one.");
+  }
+  if (Number(row.attempts) >= OTP_MAX_ATTEMPTS) {
+    db.prepare("DELETE FROM otps WHERE phone = ?").run(identifier);
+    throw new HttpError(429, "otp_locked", "Too many attempts. Request a new code.");
+  }
+  if (!safeEqual(row.code_hash, hmac(`${identifier}|${code}`))) {
+    db.prepare("UPDATE otps SET attempts = attempts + 1 WHERE phone = ?").run(identifier);
+    throw new HttpError(400, "otp_invalid", "That code is invalid or expired. Try again.");
+  }
+
+  db.prepare("DELETE FROM otps WHERE phone = ?").run(identifier);
+  const { userId, isNewUser } = findOrCreateUserByEmail(email);
+  return { token: createSession(userId), userId, isNewUser };
+}
+
 /**
  * Find or create the user row for a verified phone number.
  *

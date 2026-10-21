@@ -31,8 +31,11 @@ sample users unless `CONNEXA_AUTOSEED=1` is explicitly set.
 
 **Two ways in:**
 
-- **Sign up properly** — enter any valid Indian mobile number. The 6-digit OTP is shown
-  on screen because no SMS gateway is wired up; everything after that is real.
+- **Sign up properly** — enter any valid Indian mobile number. In development, the
+  generated 6-digit test PIN is shown on screen. Email sign-in can use the
+  **development PIN** option instead of a password. Both flows work in the browser and
+  Android debug APK; release builds keep native Firebase phone verification.
+  Set `CONNEXA_DEMO_LOGIN=0` to disable demo PINs.
 
 Production build:
 

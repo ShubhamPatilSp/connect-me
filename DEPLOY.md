@@ -61,8 +61,8 @@ query, roughly a day of work.
 | `SUPABASE_ANON_KEY` | Supabase anon/publishable key used for browser-based phone OTP. |
 
 Configure a phone SMS provider in Supabase Auth before enabling browser-based phone
-sign-in. On-screen test OTPs are enabled only where demo features are enabled; set
-`CONNEXA_DEMO_LOGIN=0` on public deployments to disable them.
+sign-in. On-screen test PINs for phone and email are enabled only where demo features
+are enabled; set `CONNEXA_DEMO_LOGIN=0` on public deployments to disable them.
 
 ## Resetting test data
 

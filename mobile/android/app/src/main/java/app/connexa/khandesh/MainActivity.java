@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -481,6 +482,12 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean hasNativeAuth() {
             return true;
+        }
+
+        /** Debug builds use the server-issued development PIN flow. */
+        @JavascriptInterface
+        public boolean isDebugBuild() {
+            return (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         }
 
         @JavascriptInterface
