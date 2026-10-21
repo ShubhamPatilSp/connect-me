@@ -23,7 +23,7 @@ export async function GET(): Promise<Response> {
     {
       ok: healthy,
       service: "connexa",
-      region: "Khandesh",
+      region: "global",
       database,
       time: new Date().toISOString(),
     },

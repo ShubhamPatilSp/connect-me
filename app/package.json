@@ -2,13 +2,13 @@
   "name": "connexa",
   "version": "1.0.0",
   "private": true,
-  "description": "Connexa — a Khandesh-only dating app",
+  "description": "Connect Me — global location-based dating app",
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
     "seed": "node --experimental-strip-types scripts/seed.ts",
-    "smoke": "node --experimental-strip-types scripts/smoke.ts"
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "next": "^15.5.28",

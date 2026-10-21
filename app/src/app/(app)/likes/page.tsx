@@ -81,7 +81,7 @@ export default function LikesPage() {
           </div>
           <h2 className="h2">No likes yet</h2>
           <p className="muted" style={{ maxWidth: 270, fontSize: 14 }}>
-            Keep swiping. In Khandesh word travels fast — your profile will get seen.
+            Keep swiping. Your profile will get seen by people nearby.
           </p>
           <Link href="/discover" className="btn btn-ghost btn-sm">
             Back to discover

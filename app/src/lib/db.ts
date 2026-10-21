@@ -150,6 +150,13 @@ CREATE TABLE IF NOT EXISTS otps (
   attempts     INTEGER NOT NULL DEFAULT 0,
   sent_at      INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS otp_request_log (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  phone        TEXT NOT NULL,
+  requested_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_otp_request_log_phone_time
+  ON otp_request_log(phone, requested_at DESC);
 
 CREATE TABLE IF NOT EXISTS sessions (
   token_hash TEXT PRIMARY KEY,
@@ -203,6 +210,7 @@ function openDatabase(): Database {
   // against a pre-email table.
   migrateUsersTable(database);
   database.exec(SCHEMA);
+  database.prepare("DELETE FROM users WHERE id = ?").run("u_demo");
   return database;
 }
 
@@ -250,8 +258,11 @@ function migrateUsersTable(db: Database): void {
 export function getDb(): Database {
   if (!g.__connexaDb) {
     g.__connexaDb = openDatabase();
-    // Seed once per process so a fresh clone boots into a populated product.
-    if (process.env.CONNEXA_AUTOSEED !== "0" && !g.__connexaSeeded) {
+    // Production stays empty unless sample data is explicitly requested.
+    const shouldSeed =
+      process.env.CONNEXA_AUTOSEED === "1" ||
+      (process.env.NODE_ENV !== "production" && process.env.CONNEXA_AUTOSEED !== "0");
+    if (shouldSeed && !g.__connexaSeeded) {
       g.__connexaSeeded = true;
       try {
         seedIfEmpty(g.__connexaDb);

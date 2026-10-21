@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { DemoButton } from "@/components/DemoButton";
 import { Icon } from "@/components/icons";
 import { Photo } from "@/components/media";
 import { getSessionRow } from "@/lib/auth";
@@ -66,8 +65,7 @@ export default async function LandingPage() {
           <span className="brand-text">Perfect Match</span>
         </h1>
         <p className={styles.sub}>
-          Khandesh only. Real people from Jalgaon, Dhule and Nandurbar — close enough to
-          actually meet this weekend.
+          Meet real people near you, wherever you are.
         </p>
 
         <div className={styles.ctaRow}>
@@ -82,11 +80,7 @@ export default async function LandingPage() {
           </Link>
         </div>
 
-        <div className={styles.demo}>
-          <DemoButton />
-        </div>
-
-        <p className={styles.foot}>18+ · Available only inside Khandesh</p>
+        <p className={styles.foot}>18+ · Meet people nearby, worldwide</p>
       </div>
     </main>
   );

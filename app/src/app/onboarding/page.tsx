@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Icon } from "@/components/icons";
+import { LocationPicker, type LocationValue } from "@/components/LocationPicker";
 import { Photo } from "@/components/media";
 import { api } from "@/lib/client/api";
 import { signInWithEmail, signUpWithEmail } from "@/lib/client/firebase-auth";
 import { GENDERS, INTEREST_TAGS, INTENTS, SEEKING } from "@/lib/constants";
-import { CITY_BY_ID, KHANDESH_CITIES } from "@/lib/geo";
 import styles from "./onboarding.module.css";
 
 const TOTAL_STEPS = 7;
@@ -27,11 +27,6 @@ const SAMPLE_PHOTOS = [
   "/seed/m05.jpg",
   "/seed/m06.jpg",
 ];
-
-const DISTRICTS = ["Jalgaon", "Dhule", "Nandurbar"] as const;
-
-/** The four towns that account for most of the region's population. */
-const POPULAR_CITIES = ["jalgaon", "dhule", "nandurbar", "bhusawal"] as const;
 
 async function fileToDataUrl(file: File): Promise<string> {
   const bitmap = await createImageBitmap(file);
@@ -69,8 +64,7 @@ export default function OnboardingPage() {
   const [gender, setGender] = useState<string>("woman");
   const [seeking, setSeeking] = useState<string>("men");
 
-  const [cityId, setCityId] = useState<string>("");
-  const [cityQuery, setCityQuery] = useState("");
+  const [location, setLocation] = useState<LocationValue | null>(null);
 
   const bodyRef = useRef<HTMLDivElement>(null);
   const [bodyFade, setBodyFade] = useState(false);
@@ -139,26 +133,6 @@ export default function OnboardingPage() {
     };
   }, [router]);
 
-  // 28 towns is too many to render at once, so the list is searchable and the
-  // scroll region is bounded — the step never grows past the viewport.
-  const cityGroups = useMemo(() => {
-    const raw = cityQuery.trim();
-    const q = raw.toLowerCase();
-    const matches = q
-      ? KHANDESH_CITIES.filter(
-          (city) =>
-            city.name.toLowerCase().includes(q) ||
-            city.local.includes(raw) ||
-            city.district.toLowerCase().includes(q),
-        )
-      : KHANDESH_CITIES;
-
-    return DISTRICTS.map((district) => ({
-      district,
-      cities: matches.filter((city) => city.district === district),
-    })).filter((group) => group.cities.length > 0);
-  }, [cityQuery]);
-
   // Signal "there is more below" instead of a hard cut at the fold.
   useEffect(() => {
     const el = bodyRef.current;
@@ -176,7 +150,7 @@ export default function OnboardingPage() {
       observer.disconnect();
       el.removeEventListener("scroll", update);
     };
-  }, [step, cityQuery]);
+  }, [step]);
 
   // Email sign-in skips the OTP screen, so the step count depends on the method.
   const totalSteps = authMode === "email" ? TOTAL_STEPS - 1 : TOTAL_STEPS;
@@ -218,6 +192,8 @@ export default function OnboardingPage() {
 
   const sendCode = useCallback(async () => {
     setError(null);
+    setDevCode(null);
+    setCode("");
 
     if (nativeAuth.current) {
       setBusy(true);
@@ -233,8 +209,10 @@ export default function OnboardingPage() {
 
     setBusy(true);
     try {
-      const res = await api.post<{ devCode: string | null }>("/api/auth/request-otp", { phone });
-      setDevCode(res.devCode);
+      const result = await api.post<{ devCode: string | null }>("/api/auth/request-otp", {
+        phone,
+      });
+      setDevCode(result.devCode);
       setStep(1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the code");
@@ -266,6 +244,7 @@ export default function OnboardingPage() {
       });
       if (res.onboardingComplete) {
         router.push("/discover");
+        router.refresh();
         return;
       }
       setStep(2);
@@ -277,6 +256,10 @@ export default function OnboardingPage() {
   }, [phone, code, router]);
 
   const submit = useCallback(async () => {
+    if (!location) {
+      setError("Choose your location to continue");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
@@ -285,7 +268,9 @@ export default function OnboardingPage() {
         birthdate,
         gender,
         seeking,
-        cityId,
+        cityId: location.label,
+        lat: location.lat,
+        lng: location.lng,
         intent,
         bio,
         job,
@@ -299,7 +284,7 @@ export default function OnboardingPage() {
       setError(err instanceof Error ? err.message : "Could not save your profile");
       setBusy(false);
     }
-  }, [name, birthdate, gender, seeking, cityId, intent, bio, job, heightCm, photos, interests, router]);
+  }, [name, birthdate, gender, seeking, location, intent, bio, job, heightCm, photos, interests, router]);
 
   const addFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -337,7 +322,7 @@ export default function OnboardingPage() {
       case 2:
         return name.trim().length >= 2 && birthdate.length === 10;
       case 3:
-        return Boolean(cityId);
+        return location !== null;
       case 4:
         return photos.length >= 1;
       case 5:
@@ -371,7 +356,6 @@ export default function OnboardingPage() {
           {displayIndex}/{totalSteps}
         </span>
       </div>
-
       <div className={styles.body} ref={bodyRef} data-fade={bodyFade}>
         {step === 0 && (
           <div className="rise">
@@ -553,7 +537,7 @@ export default function OnboardingPage() {
               <div className={styles.hint} style={{ marginTop: 16 }}>
                 <Icon name="sparkle" size={16} />
                 <span>
-                  Dev mode — your code is <code>{devCode}</code>
+                  Local development code: <code>{devCode}</code>
                 </span>
               </div>
             )}
@@ -580,7 +564,7 @@ export default function OnboardingPage() {
                 <span className="label">First name</span>
                 <input
                   className="input"
-                  placeholder="Rohan"
+                  placeholder="Hitesh"
                   value={name}
                   maxLength={40}
                   onChange={(e) => setName(e.target.value)}
@@ -636,77 +620,11 @@ export default function OnboardingPage() {
         {step === 3 && (
           <div className="rise">
             <p className={styles.kicker}>Location</p>
-            <h1 className={styles.title}>Where in Khandesh?</h1>
+            <h1 className={styles.title}>Where are you?</h1>
             <p className={styles.lead}>
-              Pick your town — we only match you with people close enough to actually meet.
+              Choose your current location so we can find people within your discovery radius.
             </p>
-
-            <div className={styles.citySearch}>
-              <span className={styles.citySearchIcon}>
-                <Icon name="search" size={17} />
-              </span>
-              <input
-                className={styles.citySearchInput}
-                placeholder="Search your town"
-                value={cityQuery}
-                autoComplete="off"
-                onChange={(e) => setCityQuery(e.target.value)}
-              />
-            </div>
-
-            {cityQuery.trim() === "" && (
-              <div className={styles.popularRow}>
-                {POPULAR_CITIES.map((id) => {
-                  const city = CITY_BY_ID.get(id);
-                  if (!city) return null;
-                  return (
-                    <button
-                      key={id}
-                      className="chip"
-                      data-active={cityId === id}
-                      onClick={() => setCityId(id)}
-                    >
-                      {city.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className={styles.cityScroll}>
-              {cityGroups.length === 0 ? (
-                <p className={styles.cityEmpty}>
-                  No town matches &ldquo;{cityQuery.trim()}&rdquo;
-                </p>
-              ) : (
-                cityGroups.map(({ district, cities }) => (
-                  <div key={district} className={styles.cityGrid}>
-                    <span className={styles.districtLabel}>{district} district</span>
-                    {cities.map((city) => (
-                      <button
-                        key={city.id}
-                        className={styles.cityBtn}
-                        data-active={cityId === city.id}
-                        onClick={() => setCityId(city.id)}
-                      >
-                        <span className={styles.cityName}>{city.name}</span>
-                        <span className={styles.cityLocal}>{city.local}</span>
-                        {cityId === city.id && (
-                          <span className={styles.cityTick}>
-                            <Icon name="check" size={14} />
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                ))
-              )}
-            </div>
-
-            <p className={styles.cityHint}>
-              <Icon name="pin" size={12} />
-              {cityId ? `${CITY_BY_ID.get(cityId)?.name} selected` : "Pick a town to continue"}
-            </p>
+            <LocationPicker value={location} onChange={setLocation} />
           </div>
         )}
 
@@ -853,7 +771,7 @@ export default function OnboardingPage() {
                 </div>
                 <textarea
                   className="input"
-                  placeholder="Jalgaon based, building things on the internet. Looking for someone to split a plate of kanda bhaji with."
+                  placeholder="Building things on the internet. Looking for someone to share a good meal with."
                   value={bio}
                   maxLength={500}
                   onChange={(e) => setBio(e.target.value)}

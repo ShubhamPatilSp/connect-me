@@ -13,7 +13,7 @@ only thing standing between the current build and a real app.
 | Matching | Precomputed queue, seven-signal score |
 | Chat | Persisted + SSE, read receipts, unread counts |
 | Safety | Blocks, reports, auto shadow-ban |
-| Region | Khandesh-only, enforced in four places |
+| Location | Global GPS, city search, and manual coordinates; 100 km default radius |
 
 ## Deploy to Render
 
@@ -51,11 +51,18 @@ query, roughly a day of work.
 
 | Key | Purpose |
 |---|---|
-| `CONNEXA_SECRET` | Signs sessions, hashes OTPs. 32+ random chars. **Changing it logs everyone out.** |
 | `CONNEXA_DB_PATH` | SQLite file location. Point at the mounted volume. |
-| `CONNEXA_DEMO_LOGIN` | `0` disables the demo login and demo upgrade endpoints everywhere. |
-| `CONNEXA_AUTOSEED` | `0` skips seeding fake profiles — launch empty. |
+| `CONNEXA_SECRET` | Signs sessions, hashes OTPs. 32+ random chars. **Changing it logs everyone out.** |
+| `CONNEXA_DEMO_LOGIN` | `0` disables demo login and the demo upgrade endpoint everywhere. |
+| `CONNEXA_AUTOSEED` | `1` explicitly seeds sample profiles (off by default in production). |
 | `FIREBASE_PROJECT_ID` | Used to validate the `aud` claim of ID tokens. |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Public Firebase Web app API key. |
+| `SUPABASE_URL` | Supabase project URL used for browser-based phone OTP. |
+| `SUPABASE_ANON_KEY` | Supabase anon/publishable key used for browser-based phone OTP. |
+
+Configure a phone SMS provider in Supabase Auth before enabling browser-based phone
+sign-in. On-screen test OTPs are enabled only where demo features are enabled; set
+`CONNEXA_DEMO_LOGIN=0` on public deployments to disable them.
 
 ## Resetting test data
 
